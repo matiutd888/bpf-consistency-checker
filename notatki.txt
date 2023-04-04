@@ -1,0 +1,27 @@
+Żeby wpiąć się w funkcję muszę podać VPF_RAW_TRACEPOINT_OPEN żeby wywołać tę funkcję
+
+bpf_raw_tracepoint_open
+
+bpf_get_raw_tracepoint
+
+bpf_trace
+
+bpf_probe_register(structA
+
+
+bpf arch text poke - interesuje nas ta funkcja, i to skąd była wywoływana, bo dzięki temu możemy zmieniać asemblerowo to co wykonuje bpfowa funkcja
+
+
+bpf/trampoline.c
+bpf/bpf_trace.c
+
+
+sys_bpf -> RAW_TRACEPOINT_OPEN -> bpf_raw_tp_link_attach -> bpf_tracing_prog_attach -> * -> bpf trampoline?? -> bpf_arch_text_poke
+
+Być może wywołanie bpf_tracing_prog_attach musimy doodać w RAW_TRACEOPOINT_OPEN?
+
+CO ON MÓWIŁ O ENDBR64?
+Czym są ftrace????
+
+
+Chcemy lib bpfem ustawić taką funkcję, co zanim ona się wykona to się wykona coś jeszcze
