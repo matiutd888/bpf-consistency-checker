@@ -14,7 +14,7 @@ struct checker_ctx {
     };
 };
 
-
+// Skąd program libbpf wie, jakie będzie prog_attach_fn?
 SEC("checker/decide")
 int check(void *a)
 {

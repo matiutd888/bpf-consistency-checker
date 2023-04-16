@@ -2954,9 +2954,9 @@ static const struct bpf_link_ops bpf_tracing_link_lops = {
 };
 
 static int bpf_tracing_prog_attach(struct bpf_prog *prog,
-				   int tgt_prog_fd,
-				   u32 btf_id,
-				   u64 bpf_cookie)
+				   int tgt_prog_fd, /* Co to za zmienna? */ // 0
+				   u32 btf_id, // 0
+				   u64 bpf_cookie) // 0
 {
 	struct bpf_link_primer link_primer;
 	struct bpf_prog *tgt_prog = NULL;
@@ -2986,6 +2986,12 @@ static int bpf_tracing_prog_attach(struct bpf_prog *prog,
 			goto out_put_prog;
 		}
 		break;
+	case BPF_PROG_TYPE_CHECKER:
+		if (prog -> expected_attach_type != BPF_CHECKER) {
+			err = -EINVAL;
+			goto out_put_prog;
+		}
+        break;
 	default:
 		err = -EINVAL;
 		goto out_put_prog;
@@ -3025,6 +3031,7 @@ static int bpf_tracing_prog_attach(struct bpf_prog *prog,
 
 	mutex_lock(&prog->aux->dst_mutex);
 
+
 	/* There are a few possible cases here:
 	 *
 	 * - if prog->aux->dst_trampoline is set, the program was just loaded
@@ -3043,6 +3050,11 @@ static int bpf_tracing_prog_attach(struct bpf_prog *prog,
 	 * - if prog->aux->dst_trampoline and tgt_prog is NULL, the program
 	 *   was detached and is going for re-attachment.
 	 */
+
+	// [MATI] czym w zasadzie jest target
+	// if tgt_prog == NULL when this function was called using the old
+	//	 *   raw_tracepoint_open API, and we need a target from prog->aux
+	// [MATI] czym jest dst trampoline
 	if (!prog->aux->dst_trampoline && !tgt_prog) {
 		/*
 		 * Allow re-attach for TRACING and LSM programs. If it's
@@ -3283,6 +3295,10 @@ static int bpf_perf_link_attach(const union bpf_attr *attr, struct bpf_prog *pro
 }
 #endif /* CONFIG_PERF_EVENTS */
 
+
+// TODO co robi w zasadzie ta funkcja
+// W zależności od typu wywołuje coś innego
+// Czy to tp_name to będzie
 static int bpf_raw_tp_link_attach(struct bpf_prog *prog,
 				  const char __user *user_tp_name)
 {
@@ -3297,6 +3313,7 @@ static int bpf_raw_tp_link_attach(struct bpf_prog *prog,
 	case BPF_PROG_TYPE_TRACING:
 	case BPF_PROG_TYPE_EXT:
 	case BPF_PROG_TYPE_LSM:
+		/* [MATI] Najprawdopodobniej trafimy tu. Należy w takim wypadku */
 		if (user_tp_name)
 			/* The attach point for this category of programs
 			 * should be specified via btf_id during program load.
@@ -3315,6 +3332,8 @@ static int bpf_raw_tp_link_attach(struct bpf_prog *prog,
 		buf[sizeof(buf) - 1] = 0;
 		tp_name = buf;
 		break;
+
+
 	default:
 		return -EINVAL;
 	}
@@ -3357,15 +3376,20 @@ static int bpf_raw_tracepoint_open(const union bpf_attr *attr)
 {
 	struct bpf_prog *prog;
 	int fd;
+	char __user *u;
 
+	printk(KERN_INFO "Calling bpf raw tracepoint open");
 	if (CHECK_ATTR(BPF_RAW_TRACEPOINT_OPEN))
 		return -EINVAL;
 
+	// Pobieramy struktury z bpf atrybutów
 	prog = bpf_prog_get(attr->raw_tracepoint.prog_fd);
 	if (IS_ERR(prog))
 		return PTR_ERR(prog);
 
-	fd = bpf_raw_tp_link_attach(prog, u64_to_user_ptr(attr->raw_tracepoint.name));
+    u = u64_to_user_ptr(attr->raw_tracepoint.name);
+	printk(KERN_INFO "raw_tracepoint data: fd=%d, name=%llu, name as user ptr %s", attr->raw_tracepoint.prog_fd, attr->raw_tracepoint.name, u);
+	fd = bpf_raw_tp_link_attach(prog, u);
 	if (fd < 0)
 		bpf_prog_put(prog);
 	return fd;

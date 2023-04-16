@@ -347,6 +347,8 @@ enum sec_def_flags {
 	 */
 	SEC_ATTACHABLE = 2,
 	SEC_ATTACHABLE_OPT = SEC_ATTACHABLE | SEC_EXP_ATTACH_OPT,
+	
+	// [MATI] nasz program ma attachement target specified in kernel.
 	/* attachment target is specified through BTF ID in either kernel or
 	 * other BPF program's BTF object
 	 */
@@ -11148,6 +11150,7 @@ static int attach_tp(const struct bpf_program *prog, long cookie, struct bpf_lin
 	free(sec_name);
 	return libbpf_get_error(*link);
 }
+
 
 struct bpf_link *bpf_program__attach_raw_tracepoint(const struct bpf_program *prog,
 						    const char *tp_name)

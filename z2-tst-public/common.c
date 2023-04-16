@@ -16,6 +16,7 @@ int bpf_test_load(char *bpf, struct bpf_test *test)
 
     test->j = 0;
     bpf_object__for_each_program(test->prog, test->obj) {
+		printf("Program %d");
 		test->links[test->j] = bpf_program__attach(test->prog);
 
 		if (libbpf_get_error(test->links[test->j])) {

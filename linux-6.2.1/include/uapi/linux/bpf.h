@@ -986,6 +986,7 @@ enum bpf_prog_type {
 	BPF_PROG_TYPE_LSM,
 	BPF_PROG_TYPE_SK_LOOKUP,
 	BPF_PROG_TYPE_SYSCALL, /* a program that can execute syscalls */
+	BPF_PROG_TYPE_CHECKER, /* [MATI] A program that can count and check checksums */
 };
 
 enum bpf_attach_type {
@@ -1033,6 +1034,7 @@ enum bpf_attach_type {
 	BPF_PERF_EVENT,
 	BPF_TRACE_KPROBE_MULTI,
 	BPF_LSM_CGROUP,
+	BPF_CHECKER, /* [MATI] Program attach type that can be attached to open* and write* ??? */
 	__MAX_BPF_ATTACH_TYPE
 };
 
@@ -1472,9 +1474,10 @@ union bpf_attr {
 		__aligned_u64	prog_attach_flags;
 	} query;
 
+	// [MATI] co to będzie to name
 	struct { /* anonymous struct used by BPF_RAW_TRACEPOINT_OPEN command */
 		__u64 name;
-		__u32 prog_fd;
+		__u32 prog_fd; // FD służy do znalezienia programu z atrybutów
 	} raw_tracepoint;
 
 	struct { /* anonymous struct for BPF_BTF_LOAD */
