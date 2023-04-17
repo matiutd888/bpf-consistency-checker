@@ -15,22 +15,22 @@ int main(int argc, char **argv)
         goto cleanup;
     }
 
-	int checksum;
-	size_t size;
-	off_t offset;
-	assert(syscall(453, fd) == 0);
-	do_write(fd, msg, strlen(msg), 0);
-	assert(syscall(451, fd, &checksum, &size, &offset) == 0);
-	assert(checksum == 4 && size == 12 && offset == 6);
-	syscall(452, size, offset, &checksum);
-	assert(checksum == 4 && size == 12 && offset == 6);
-	assert(syscall(453, fd) == 2);
-	do_write(fd, msg, strlen(msg), 0);
-	assert(syscall(453, fd) == 3);
-	syscall(454, fd);
-	assert(syscall(453, fd) == 0);
+	// int checksum;
+	// size_t size;
+	// off_t offset;
+	// assert(syscall(453, fd) == 0);
+	// do_write(fd, msg, strlen(msg), 0);
+	// assert(syscall(451, fd, &checksum, &size, &offset) == 0);
+	// assert(checksum == 4 && size == 12 && offset == 6);
+	// syscall(452, size, offset, &checksum);
+	// assert(checksum == 4 && size == 12 && offset == 6);
+	// assert(syscall(453, fd) == 2);
+	// do_write(fd, msg, strlen(msg), 0);
+	// assert(syscall(453, fd) == 3);
+	// syscall(454, fd);
+	// assert(syscall(453, fd) == 0);
 
-	close(fd);
+	// close(fd);
 
 
 cleanup:

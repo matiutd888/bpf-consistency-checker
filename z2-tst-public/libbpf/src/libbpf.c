@@ -8375,7 +8375,7 @@ int bpf_program__set_insns(struct bpf_program *prog,
 	prog->insns = insns;
 	prog->insns_cnt = new_insn_cnt;
 	return 0;
-}
+}	
 
 int bpf_program__fd(const struct bpf_program *prog)
 {
@@ -11170,6 +11170,8 @@ struct bpf_link *bpf_program__attach_raw_tracepoint(const struct bpf_program *pr
 		return libbpf_err_ptr(-ENOMEM);
 	link->detach = &bpf_link__detach_fd;
 
+	printf("[MATI] %s %s %s %d\n", prog->name, prog->sec_name, tp_name, prog_fd);
+
 	pfd = bpf_raw_tracepoint_open(tp_name, prog_fd);
 	if (pfd < 0) {
 		pfd = -errno;
@@ -11436,6 +11438,8 @@ struct bpf_link *bpf_program__attach(const struct bpf_program *prog)
 {
 	struct bpf_link *link = NULL;
 	int err;
+
+	printf("Program %s %s %d\n", prog->name, prog->sec_name, prog->sec_def->handler_id);
 
 	if (!prog->sec_def || !prog->sec_def->prog_attach_fn)
 		return libbpf_err_ptr(-EOPNOTSUPP);

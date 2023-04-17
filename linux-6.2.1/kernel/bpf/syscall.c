@@ -2953,6 +2953,8 @@ static const struct bpf_link_ops bpf_tracing_link_lops = {
 	.fill_link_info = bpf_tracing_link_fill_link_info,
 };
 
+
+
 static int bpf_tracing_prog_attach(struct bpf_prog *prog,
 				   int tgt_prog_fd, /* Co to za zmienna? */ // 0
 				   u32 btf_id, // 0
@@ -3378,7 +3380,7 @@ static int bpf_raw_tracepoint_open(const union bpf_attr *attr)
 	int fd;
 	char __user *u;
 
-	printk(KERN_INFO "Calling bpf raw tracepoint open");
+	printk(KERN_INFO "[MATI] Calling bpf raw tracepoint open");
 	if (CHECK_ATTR(BPF_RAW_TRACEPOINT_OPEN))
 		return -EINVAL;
 
@@ -3388,7 +3390,7 @@ static int bpf_raw_tracepoint_open(const union bpf_attr *attr)
 		return PTR_ERR(prog);
 
     u = u64_to_user_ptr(attr->raw_tracepoint.name);
-	printk(KERN_INFO "raw_tracepoint data: fd=%d, name=%llu, name as user ptr %s", attr->raw_tracepoint.prog_fd, attr->raw_tracepoint.name, u);
+	printk(KERN_INFO "[MATI] raw_tracepoint data: fd=%d, name=%llu, name as user ptr %s", attr->raw_tracepoint.prog_fd, attr->raw_tracepoint.name, u);
 	fd = bpf_raw_tp_link_attach(prog, u);
 	if (fd < 0)
 		bpf_prog_put(prog);

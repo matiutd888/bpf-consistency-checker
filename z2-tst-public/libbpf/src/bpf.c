@@ -1066,7 +1066,7 @@ int bpf_link_get_info_by_fd(int link_fd, struct bpf_link_info *info, __u32 *info
 	return bpf_obj_get_info_by_fd(link_fd, info, info_len);
 }
 
-// [MATI]
+// [MATI] z tego wynika, że name to raczej będzie NULL?
 int bpf_raw_tracepoint_open(const char *name, int prog_fd)
 {
 	const size_t attr_sz = offsetofend(union bpf_attr, raw_tracepoint);
