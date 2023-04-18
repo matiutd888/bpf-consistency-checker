@@ -3034,6 +3034,7 @@ static int bpf_tracing_prog_attach(struct bpf_prog *prog,
 	mutex_lock(&prog->aux->dst_mutex);
 
 
+	
 	/* There are a few possible cases here:
 	 *
 	 * - if prog->aux->dst_trampoline is set, the program was just loaded
@@ -3311,11 +3312,17 @@ static int bpf_raw_tp_link_attach(struct bpf_prog *prog,
 	char buf[128];
 	int err;
 
+	if (prog->aux->attach_func_name) {
+		printk("[MATI] attach func name %s\n", prog->aux->attach_func_name);
+	} else {
+		printk("[MATI] attach func name == NULL\n");
+	}
 	switch (prog->type) {
 	case BPF_PROG_TYPE_TRACING:
 	case BPF_PROG_TYPE_EXT:
 	case BPF_PROG_TYPE_LSM:
 		/* [MATI] Najprawdopodobniej trafimy tu. Należy w takim wypadku */
+		/* Chcemy śledzić tę ścieżkę bo my też dosdtaniemy NULL */
 		if (user_tp_name)
 			/* The attach point for this category of programs
 			 * should be specified via btf_id during program load.
@@ -3420,6 +3427,7 @@ static int bpf_prog_attach_check_attach_type(const struct bpf_prog *prog,
 	}
 }
 
+// [MATI] gdzoe ta fimlcka jest używana.
 static enum bpf_prog_type
 attach_type_to_prog_type(enum bpf_attach_type attach_type)
 {
@@ -3478,6 +3486,8 @@ attach_type_to_prog_type(enum bpf_attach_type attach_type)
 		return BPF_PROG_TYPE_XDP;
 	case BPF_LSM_CGROUP:
 		return BPF_PROG_TYPE_LSM;
+	case BPF_CHECKER:
+		return BPF_PROG_TYPE_CHECKER;
 	default:
 		return BPF_PROG_TYPE_UNSPEC;
 	}

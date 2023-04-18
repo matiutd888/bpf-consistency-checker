@@ -4,8 +4,9 @@
 // #include <bpf_tracing.h>
 
 SEC("raw_tracepoint/sys_enter")
-int raw_tracepoint__sys_enter(struct bpf_raw_tracepoint_args *ctx) {
-    bpf_trace_prink("Siema");
+int custom_program_name(struct bpf_raw_tracepoint_args *ctx) {
+    char fmt[] = "siema";
+    bpf_trace_printk(fmt, sizeof(fmt));
     // unsigned long syscall_id = ctx->args[1];
     // if (syscall_id != 268) // fchmodat
     //     return 0;

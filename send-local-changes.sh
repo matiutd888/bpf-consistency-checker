@@ -7,7 +7,7 @@ cd ~/studia-current/zso/zso-2
 last_commit_time=$(git log -1 --format=%ct)
 
 # Find all files changed since the last commit
-changed_files=$(git diff --name-only HEAD^)
+changed_files=$(git diff --name-only HEAD)
 echo $changed_files
 
 for f in $changed_files

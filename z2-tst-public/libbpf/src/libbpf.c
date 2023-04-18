@@ -9003,6 +9003,7 @@ static int find_btf_by_prefix_kind(const struct btf *btf, const char *prefix,
 	return ret;
 }
 
+// [MATI] tu obliczane są btf id
 static inline int find_attach_btf_id(struct btf *btf, const char *name,
 				     enum bpf_attach_type attach_type)
 {
@@ -11155,6 +11156,7 @@ static int attach_tp(const struct bpf_program *prog, long cookie, struct bpf_lin
 struct bpf_link *bpf_program__attach_raw_tracepoint(const struct bpf_program *prog,
 						    const char *tp_name)
 {
+	// tp_name to będzie nazwa tracepointa
 	char errmsg[STRERR_BUFSIZE];
 	struct bpf_link *link;
 	int prog_fd, pfd;
@@ -11186,6 +11188,7 @@ struct bpf_link *bpf_program__attach_raw_tracepoint(const struct bpf_program *pr
 
 static int attach_raw_tp(const struct bpf_program *prog, long cookie, struct bpf_link **link)
 {
+	printf("[MATI] attach raw tp called!\n");
 	static const char *const prefixes[] = {
 		"raw_tp",
 		"raw_tracepoint",
@@ -11439,7 +11442,7 @@ struct bpf_link *bpf_program__attach(const struct bpf_program *prog)
 	struct bpf_link *link = NULL;
 	int err;
 
-	printf("Program %s %s %d\n", prog->name, prog->sec_name, prog->sec_def->handler_id);
+	printf("[MATI] Program %s %s %d, btf id = %d\n", prog->name, prog->sec_name, prog->sec_def->handler_id, prog->attach_btf_id);
 
 	if (!prog->sec_def || !prog->sec_def->prog_attach_fn)
 		return libbpf_err_ptr(-EOPNOTSUPP);
