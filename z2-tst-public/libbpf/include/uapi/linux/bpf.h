@@ -5719,6 +5719,8 @@ union bpf_attr {
 	FN(cgrp_storage_get, 210, ##ctx)		\
 	FN(cgrp_storage_delete, 211, ##ctx)		\
 	FN(copy_to_buffer, 212, ##ctx)		\
+
+/*[MATI] copy_t	o_buffer to zadeklarowane */
 	/* */
 
 /* backwards-compatibility macros for users of __BPF_FUNC_MAPPER that don't

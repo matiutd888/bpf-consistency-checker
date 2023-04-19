@@ -8997,6 +8997,7 @@ static int find_btf_by_prefix_kind(const struct btf *btf, const char *prefix,
 	 * terminating null. So, if >= BTF_MAX_NAME_SIZE are written, it
 	 * indicates truncation.
 	 */
+	printf("[MATI] find_btf_by_prefix_kind ret=%d\n", ret);
 	if (ret < 0 || ret >= sizeof(btf_type_name))
 		return -ENAMETOOLONG;
 	ret = btf__find_by_name_kind(btf, btf_type_name, kind);
@@ -9011,6 +9012,7 @@ static inline int find_attach_btf_id(struct btf *btf, const char *name,
 	int kind;
 
 	btf_get_kernel_prefix_kind(attach_type, &prefix, &kind);
+	printf("[MATI] find_attach_btf_id: prefix=%s kind=%d\n", prefix, kind);
 	return find_btf_by_prefix_kind(btf, prefix, name, kind);
 }
 
@@ -9076,7 +9078,8 @@ static int find_kernel_btf_id(struct bpf_object *obj, const char *attach_name,
 			      int *btf_obj_fd, int *btf_type_id)
 {
 	int ret, i;
-		
+	
+	printf("[MATI] find_kernel_btf_id attach_name=%s attach_type=%d\n", attach_name, attach_type);
 	ret = find_attach_btf_id(obj->btf_vmlinux, attach_name, attach_type);
 	if (ret > 0) {
 		*btf_obj_fd = 0; /* vmlinux BTF */
@@ -11172,7 +11175,7 @@ struct bpf_link *bpf_program__attach_raw_tracepoint(const struct bpf_program *pr
 		return libbpf_err_ptr(-ENOMEM);
 	link->detach = &bpf_link__detach_fd;
 
-	printf("[MATI] %s %s %s %d\n", prog->name, prog->sec_name, tp_name, prog_fd);
+	printf("[MATI] bpf_program__attach_raw_tracepoint: %s %s %s %d\n", prog->name, prog->sec_name, tp_name, prog_fd);
 
 	pfd = bpf_raw_tracepoint_open(tp_name, prog_fd);
 	if (pfd < 0) {
@@ -11188,7 +11191,7 @@ struct bpf_link *bpf_program__attach_raw_tracepoint(const struct bpf_program *pr
 
 static int attach_raw_tp(const struct bpf_program *prog, long cookie, struct bpf_link **link)
 {
-	printf("[MATI] attach raw tp called!\n");
+	printf("[MATI] attach_raw_tp: attach raw tp called!\n");
 	static const char *const prefixes[] = {
 		"raw_tp",
 		"raw_tracepoint",
@@ -11442,7 +11445,7 @@ struct bpf_link *bpf_program__attach(const struct bpf_program *prog)
 	struct bpf_link *link = NULL;
 	int err;
 
-	printf("[MATI] Program %s %s %d, btf id = %d\n", prog->name, prog->sec_name, prog->sec_def->handler_id, prog->attach_btf_id);
+	printf("[MATI] bpf_program__attach: Program %s %s %d, btf id = %d\n", prog->name, prog->sec_name, prog->sec_def->handler_id, prog->attach_btf_id);
 
 	if (!prog->sec_def || !prog->sec_def->prog_attach_fn)
 		return libbpf_err_ptr(-EOPNOTSUPP);
