@@ -9082,6 +9082,7 @@ static int find_kernel_btf_id(struct bpf_object *obj, const char *attach_name,
 	printf("[MATI] find_kernel_btf_id attach_name=%s attach_type=%d\n", attach_name, attach_type);
 	ret = find_attach_btf_id(obj->btf_vmlinux, attach_name, attach_type);
 	if (ret > 0) {
+		printf("[MATI] find_kernel_btf_id: btf id = %d\n", ret);
 		*btf_obj_fd = 0; /* vmlinux BTF */
 		*btf_type_id = ret;
 		return 0;
@@ -9090,7 +9091,7 @@ static int find_kernel_btf_id(struct bpf_object *obj, const char *attach_name,
 		return ret;
 
 	ret = load_module_btfs(obj);
-	if (ret)
+	if (ret)	
 		return ret;
 
 	for (i = 0; i < obj->btf_module_cnt; i++) {

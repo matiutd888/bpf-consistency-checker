@@ -770,8 +770,9 @@ static __s32 btf_find_by_name_kind(const struct btf *btf, int start_id,
 		if (btf_kind(t) != kind)
 			continue;
 		
-		if (name && !strcmp(type_name, name))
+		if (name && !strcmp(type_name, name)) {
 			return i;
+		}
 	}
 
 	return libbpf_err(-ENOENT);

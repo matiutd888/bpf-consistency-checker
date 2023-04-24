@@ -2332,6 +2332,7 @@ bpf_prog_load_check_attach(enum bpf_prog_type prog_type,
 		case BPF_PROG_TYPE_LSM:
 		case BPF_PROG_TYPE_STRUCT_OPS:
 		case BPF_PROG_TYPE_EXT:
+		case BPF_PROG_TYPE_CHECKER:
 			break;
 		default:
 			return -EINVAL;
@@ -2407,6 +2408,11 @@ bpf_prog_load_check_attach(enum bpf_prog_type prog_type,
 		if (expected_attach_type)
 			return -EINVAL;
 		fallthrough;
+	case BPF_PROG_TYPE_CHECKER:
+		if (expected_attach_type == BPF_CHECKER) {
+			return 0;
+		}
+		return -EINVAL;
 	default:
 		return 0;
 	}
@@ -2473,8 +2479,16 @@ static int bpf_prog_load(union bpf_attr *attr, bpfptr_t uattr)
 	char license[128];
 	bool is_gpl;
 
+	
+	printk(KERN_INFO "[MATI] bpf_prog_load: prog_type: %d, prog_btf_fd: %d, attach_btf_id: %d\n", 
+	attr->prog_type, 
+	attr->prog_btf_fd, 
+	attr->attach_btf_id);
+
 	if (CHECK_ATTR(BPF_PROG_LOAD))
 		return -EINVAL;
+
+	printk(KERN_INFO "[MATI] bpf_prog_load: attribuite checked!\n");
 
 	if (attr->prog_flags & ~(BPF_F_STRICT_ALIGNMENT |
 				 BPF_F_ANY_ALIGNMENT |
@@ -2531,6 +2545,8 @@ static int bpf_prog_load(union bpf_attr *attr, bpfptr_t uattr)
 			}
 		}
 	} else if (attr->attach_btf_id) {
+
+		printk(KERN_INFO "[MATI] bpf_prog_load: checking bpf_get_btf_vmlinux!\n");
 		/* fall back to vmlinux BTF, if BTF type ID is specified */
 		attach_btf = bpf_get_btf_vmlinux();
 		if (IS_ERR(attach_btf))
@@ -2539,6 +2555,10 @@ static int bpf_prog_load(union bpf_attr *attr, bpfptr_t uattr)
 			return -EINVAL;
 		btf_get(attach_btf);
 	}
+
+	printk(KERN_INFO "[MATI] bpf_prog_load: attach_btf read from vmlinux correctly!\n");
+
+	printk(KERN_INFO "[MATI] bpf_prog_load: checking attach type\n");
 
 	bpf_prog_load_fixup_attach_type(attr);
 	if (bpf_prog_load_check_attach(type, attr->expected_attach_type,
@@ -2551,6 +2571,9 @@ static int bpf_prog_load(union bpf_attr *attr, bpfptr_t uattr)
 		return -EINVAL;
 	}
 
+	printk(KERN_INFO "[MATI] bpf_prog_load: attach type checked correctly\n");
+
+
 	/* plain bpf_prog allocation */
 	prog = bpf_prog_alloc(bpf_prog_size(attr->insn_cnt), GFP_USER);
 	if (!prog) {
@@ -2560,6 +2583,9 @@ static int bpf_prog_load(union bpf_attr *attr, bpfptr_t uattr)
 			btf_put(attach_btf);
 		return -ENOMEM;
 	}
+
+	printk(KERN_INFO "[MATI] bpf_prog_load: program allocated\n");
+
 
 	prog->expected_attach_type = attr->expected_attach_type;
 	prog->aux->attach_btf = attach_btf;
@@ -2594,10 +2620,16 @@ static int bpf_prog_load(union bpf_attr *attr, bpfptr_t uattr)
 			goto free_prog_sec;
 	}
 
+	printk(KERN_INFO "[MATI] bpf_prog_load: finding program type...\n");
+
+
 	/* find program type: socket_filter vs tracing_filter */
 	err = find_prog_type(type, prog);
 	if (err < 0)
 		goto free_prog_sec;
+
+	printk(KERN_INFO "[MATI] bpf_prog_load: program type found\n");
+
 
 	prog->aux->load_time = ktime_get_boottime_ns();
 	err = bpf_obj_name_cpy(prog->aux->name, attr->prog_name,
@@ -2605,15 +2637,20 @@ static int bpf_prog_load(union bpf_attr *attr, bpfptr_t uattr)
 	if (err < 0)
 		goto free_prog_sec;
 
+
+	printk(KERN_INFO "[MATI] bpf_prog_load: veryfying...\n");
 	/* run eBPF verifier */
 	err = bpf_check(&prog, attr, uattr);
 	if (err < 0)
 		goto free_used_maps;
 
+	printk(KERN_INFO "[MATI] bpf_prog_load: veryfied!\n");
+
 	prog = bpf_prog_select_runtime(prog, &err);
 	if (err < 0)
 		goto free_used_maps;
 
+	printk(KERN_INFO "[MATI] bpf_prog_load: runtime selected!	\n");
 	err = bpf_prog_alloc_id(prog);
 	if (err)
 		goto free_used_maps;

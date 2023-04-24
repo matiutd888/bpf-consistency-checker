@@ -1024,13 +1024,6 @@ void notrace __bpf_tramp_exit(struct bpf_tramp_image *tr)
 	percpu_ref_put(&tr->pcref);
 }
 
-int bpf_checker_decide(struct checker_ctx *ctx) {
-	return 1;
-}
-int bpf_checker_calculate(struct checker_ctx *ctx) {
-	return 1;
-}
-
 bpf_trampoline_enter_t bpf_trampoline_enter(const struct bpf_prog *prog)
 {
 	bool sleepable = prog->aux->sleepable;

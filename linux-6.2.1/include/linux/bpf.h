@@ -1023,17 +1023,21 @@ struct bpf_tramp_image {
 };
 
 struct checker_ctx {
-    union {
-        struct {
-            long long offset;
-            unsigned int size;
-        };
-        struct {
-            __u64 flags;
-            __u64 mode;
-        };
-    };
-};
+  union {
+     /* write */
+     struct {
+         loff_t offset;
+         size_t size;
+     };
+     /* open */
+     struct {
+         u64 flags; /* open flags */
+         umode_t mode; /* inode mode */
+         kuid_t uid; /* owner */
+         kgid_t gid; /* group */
+     };
+  };
+};	
 
 
 struct bpf_trampoline {
