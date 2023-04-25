@@ -18,6 +18,6 @@
 
 # Send the changed files to the remote server using scp
 # scp $changed_files zso-root:zso-2/$changed_files
-rsync -iruvhP z2-tst-public zso-root:zso-2/
+rsync --dry-run --exclude "*.o.d" -rvuhP z2-tst-public zso-root:zso-2/
 echo "test synced"
-rsync -iruvhP linux-6.2.1 zso-root:zso-2/
+rsync --exclude "*.o.d" -rvuhP linux-6.2.1 zso-root:zso-2/
