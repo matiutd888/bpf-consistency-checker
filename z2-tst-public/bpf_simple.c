@@ -21,6 +21,7 @@ int check(void *a)
     return 3;
 }
 
+// TEST COMMENT
 SEC("checker/calculate")
 int bpf_prog1(struct checker_ctx *ctx)
 {
