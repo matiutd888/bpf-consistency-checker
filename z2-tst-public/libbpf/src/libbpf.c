@@ -206,8 +206,9 @@ static const char * const prog_type_name[] = {
 static int __base_pr(enum libbpf_print_level level, const char *format,
 		     va_list args)
 {
-	if (level == LIBBPF_DEBUG)
-		return 0;
+	// [MATI] enable libbpf debug
+	// if (level == LIBBPF_DEBUG)
+	// 	return 0;
 
 	return vfprintf(stderr, format, args);
 }
@@ -11446,7 +11447,7 @@ struct bpf_link *bpf_program__attach(const struct bpf_program *prog)
 	struct bpf_link *link = NULL;
 	int err;
 
-	printf("[MATI] bpf_program__attach: Program %s %s %d, btf id = %d\n", prog->name, prog->sec_name, prog->sec_def->handler_id, prog->attach_btf_id);
+	printf("[MATI] bpf_program__attach: Program %d, btf id = %d\n", prog->sec_def->handler_id, prog->attach_btf_id);
 
 	if (!prog->sec_def || !prog->sec_def->prog_attach_fn)
 		return libbpf_err_ptr(-EOPNOTSUPP);

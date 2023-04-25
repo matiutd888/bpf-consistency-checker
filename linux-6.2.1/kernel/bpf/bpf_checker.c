@@ -11,9 +11,9 @@ int bpf_checker_calculate(struct checker_ctx *ctx) {
 // influenced by 
 // bpf_lsm_func_proto(enum bpf_func_id func_id, const struct bpf_prog *prog)
 // in bpf_lsm.c
-// static const struct bpf_func_proto *bpf_checker_func_proto(enum bpf_func_id func_id, const struct bpf_prog *prog) {
-// 	return tracing_prog_func_proto(func_id, prog);
-// }
+	// static const struct bpf_func_proto *bpf_checker_func_proto(enum bpf_func_id func_id, const struct bpf_prog *prog) {
+	// 	return tracing_prog_func_proto(func_id, prog);
+	// }
 
 const struct bpf_prog_ops checker_prog_ops = {
 };

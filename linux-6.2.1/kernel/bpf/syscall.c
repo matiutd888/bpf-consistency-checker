@@ -68,6 +68,7 @@ static const struct bpf_map_ops * const bpf_map_types[] = {
 #undef BPF_LINK_TYPE
 };
 
+
 /*
  * If we're handed a bigger struct than we know of, ensure all the unknown bits
  * are 0 - i.e. new user-space does not rely on any kernel feature extensions
@@ -3058,6 +3059,8 @@ static int bpf_tracing_prog_attach(struct bpf_prog *prog,
 		key = bpf_trampoline_compute_key(tgt_prog, NULL, btf_id);
 	}
 
+	printk(KERN_INFO "[MATI] bpf_tracing_prog_attach: initial checks executed correctly!\n");
+
 	link = kzalloc(sizeof(*link), GFP_USER);
 	if (!link) {
 		err = -ENOMEM;
@@ -3095,7 +3098,9 @@ static int bpf_tracing_prog_attach(struct bpf_prog *prog,
 	// if tgt_prog == NULL when this function was called using the old
 	//	 *   raw_tracepoint_open API, and we need a target from prog->aux
 	// [MATI] czym jest dst trampoline
+	printk(KERN_INFO "[MATI] bpf_tracing_prog_attach: computing btf_id and key..\n");
 	if (!prog->aux->dst_trampoline && !tgt_prog) {
+		printk(KERN_INFO "[MATI] bpf_tracing_prog_attach: dst trampoline not set, computing dst trampoline\n");
 		/*
 		 * Allow re-attach for TRACING and LSM programs. If it's
 		 * currently linked, bpf_trampoline_link_prog will fail.
@@ -3103,33 +3108,46 @@ static int bpf_tracing_prog_attach(struct bpf_prog *prog,
 		 * re-attach in separate code path.
 		 */
 		if (prog->type != BPF_PROG_TYPE_TRACING &&
-		    prog->type != BPF_PROG_TYPE_LSM) {
+		    prog->type != BPF_PROG_TYPE_LSM &&
+		    prog->type != BPF_PROG_TYPE_CHECKER) {
 			err = -EINVAL;
 			goto out_unlock;
 		}
 		btf_id = prog->aux->attach_btf_id;
+		printk(KERN_INFO "[MATI] bpf_tracing_prog_attach: btf id: %d\n", btf_id);
 		key = bpf_trampoline_compute_key(NULL, prog->aux->attach_btf, btf_id);
 	}
+	printk(KERN_INFO "[MATI] bpf_tracing_prog_attach: btf key computed\n");
 
 	if (!prog->aux->dst_trampoline ||
 	    (key && key != prog->aux->dst_trampoline->key)) {
+
 		/* If there is no saved target, or the specified target is
 		 * different from the destination specified at load time, we
 		 * need a new trampoline and a check for compatibility
 		 */
 		struct bpf_attach_target_info tgt_info = {};
 
+		
+		printk(KERN_INFO "[MATI] bpf_tracing_prog_attach: dst trampoline not set or key was set to different value than in dst trampoline\n");
+		printk(KERN_INFO "[MATI] bpf_tracing_prog_attach: will use tgt_prog and btf_id to attach target and get target info\n");
+		
 		err = bpf_check_attach_target(NULL, prog, tgt_prog, btf_id,
 					      &tgt_info);
 		if (err)
 			goto out_unlock;
 
+	
+		printk(KERN_INFO "[MATI] bpf_tracing_prog_attach: getting trampoline key...\n");
+		
 		tr = bpf_trampoline_get(key, &tgt_info);
 		if (!tr) {
 			err = -ENOMEM;
 			goto out_unlock;
 		}
+		printk(KERN_INFO "[MATI] bpf_tracing_prog_attach: getting trampoline finished correctly!\n");
 	} else {
+		printk(KERN_INFO "[MATI] bpf_tracing_prog_attach: other way; will use dst_Trampoline from prog->aux..\n");
 		/* The caller didn't specify a target, or the target was the
 		 * same as the destination supplied during program load. This
 		 * means we can reuse the trampoline and reference from program
@@ -3358,6 +3376,7 @@ static int bpf_raw_tp_link_attach(struct bpf_prog *prog,
 	case BPF_PROG_TYPE_TRACING:
 	case BPF_PROG_TYPE_EXT:
 	case BPF_PROG_TYPE_LSM:
+	case BPF_PROG_TYPE_CHECKER:
 		/* [MATI] Najprawdopodobniej trafimy tu. Należy w takim wypadku */
 		/* Chcemy śledzić tę ścieżkę bo my też dosdtaniemy NULL */
 		if (user_tp_name)

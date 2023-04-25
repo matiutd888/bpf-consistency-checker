@@ -16495,7 +16495,7 @@ static int check_non_sleepable_error_inject(u32 btf_id)
 // [MATI] obczaic tę funkcję
 int bpf_check_attach_target(struct bpf_verifier_log *log,
 			    const struct bpf_prog *prog,
-			    const struct bpf_prog *tgt_prog,
+			    const struct bpf_prog *tgt_prog, // NULL
 			    u32 btf_id,
 			    struct bpf_attach_target_info *tgt_info)
 {
@@ -16518,16 +16518,19 @@ int bpf_check_attach_target(struct bpf_verifier_log *log,
 			"FENTRY/FEXIT program can only be attached to another program annotated with BTF\n");
 		return -EINVAL;
 	}
+	printk("[MATI] bpf_check_attach_target: btf checks ok! getting btf type by id!\n");
 	t = btf_type_by_id(btf, btf_id);
 	if (!t) {
 		bpf_log(log, "attach_btf_id %u is invalid\n", btf_id);
 		return -EINVAL;
 	}
+	printk("[MATI] bpf_check_attach_target: getting btf name by offset!\n");
 	tname = btf_name_by_offset(btf, t->name_off);
 	if (!tname) {
 		bpf_log(log, "attach_btf_id %u doesn't have a name\n", btf_id);
 		return -EINVAL;
 	}
+	printk("[MATI] bpf_check_attach_target: name: %s\n", tname);
 	if (tgt_prog) {
 		struct bpf_prog_aux *aux = tgt_prog->aux;
 
@@ -16593,7 +16596,7 @@ int bpf_check_attach_target(struct bpf_verifier_log *log,
 			return -EINVAL;
 		}
 	}
-
+	printk("[MATI] bpf_check_attach_target: checking prog attach type\n");
 	switch (prog->expected_attach_type) {
 	case BPF_TRACE_RAW_TP:
 		if (tgt_prog) {
@@ -16644,6 +16647,7 @@ int bpf_check_attach_target(struct bpf_verifier_log *log,
 	case BPF_LSM_CGROUP:
 	case BPF_TRACE_FENTRY:
 	case BPF_TRACE_FEXIT:
+	case BPF_CHECKER:
 		if (!btf_type_is_func(t)) {
 			bpf_log(log, "attach_btf_id %u is not a function\n",
 				btf_id);
@@ -16710,6 +16714,9 @@ int bpf_check_attach_target(struct bpf_verifier_log *log,
 				 */
 				if (bpf_lsm_is_sleepable_hook(btf_id))
 					ret = 0;
+				break;
+			case BPF_PROG_TYPE_CHECKER:
+				printk("[MATI] bpf_check_attach_target: checker type sleepable!\n");
 				break;
 			default:
 				break;
