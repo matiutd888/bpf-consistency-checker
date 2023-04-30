@@ -2,9 +2,11 @@
 #include "bpf_checker.h"
 
 int bpf_checker_decide(struct checker_ctx *ctx) {
-	return 1;
+	// printk(KERN_INFO "[MATI] bpf_checker_decide code is running!\n");
+	return 0;
 }
 int bpf_checker_calculate(struct checker_ctx *ctx) {
+	printk(KERN_INFO "[MATI] bpf_checker_calculate code is running!\n");
 	return 1;
 }
 

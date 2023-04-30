@@ -18,6 +18,8 @@ struct checker_ctx {
 SEC("checker/decide")
 int check(void *a)
 {
+    // char fmt[] = "[MATI] bpf_simple.c: checker/decide called!";
+    // bpf_trace_printk(fmt, sizeof(fmt));
     return 3;
 }
 
@@ -25,6 +27,8 @@ int check(void *a)
 SEC("checker/calculate")
 int bpf_prog1(struct checker_ctx *ctx)
 {
+    // char fmt[] = "[MATI] bpf_simple.c: checker/calculate called!";
+    // bpf_trace_printk(fmt, sizeof(fmt));
     return 4;
 }
 

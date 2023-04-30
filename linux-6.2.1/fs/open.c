@@ -33,7 +33,7 @@
 #include <linux/dnotify.h>
 #include <linux/compat.h>
 #include <linux/mnt_idmapping.h>
-
+#include <linux/bpf.h>
 #include "internal.h"
 
 int do_truncate(struct user_namespace *mnt_userns, struct dentry *dentry,
@@ -1291,13 +1291,15 @@ struct file *file_open_root(const struct path *root,
 }
 EXPORT_SYMBOL(file_open_root);
 
+// [MATI] do_sys_openat2 prawdopdobnie to muszę użyć
 static long do_sys_openat2(int dfd, const char __user *filename,
 			   struct open_how *how)
 {
 	struct open_flags op;
 	int fd = build_open_flags(how, &op);
 	struct filename *tmp;
-
+	struct checker_ctx x;
+	
 	if (fd)
 		return fd;
 
@@ -1317,6 +1319,7 @@ static long do_sys_openat2(int dfd, const char __user *filename,
 		}
 	}
 	putname(tmp);
+	bpf_checker_decide(&x);
 	return fd;
 }
 
