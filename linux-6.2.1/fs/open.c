@@ -1299,7 +1299,8 @@ static long do_sys_openat2(int dfd, const char __user *filename,
 	int fd = build_open_flags(how, &op);
 	struct filename *tmp;
 	struct checker_ctx x;
-	
+	int ret;
+
 	if (fd)
 		return fd;
 
@@ -1319,7 +1320,10 @@ static long do_sys_openat2(int dfd, const char __user *filename,
 		}
 	}
 	putname(tmp);
-	bpf_checker_decide(&x);
+	ret = bpf_checker_decide(&x);
+	if (ret != 0) {
+		printk("[MATI] checker_decide returned value different than 0! ret = %d\n", ret);
+	}
 	return fd;
 }
 

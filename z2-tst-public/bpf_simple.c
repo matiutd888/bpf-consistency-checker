@@ -1,5 +1,6 @@
 #include <linux/types.h>
 #include <bpf_helpers.h>
+#include <bpf_core_read.h>
 
 struct checker_ctx {
     union {

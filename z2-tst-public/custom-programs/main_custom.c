@@ -9,6 +9,10 @@ int main(int argc, char **argv)
     if (bpf_test_load("bpf_shed.o", &test) != 0)
         return -1;
 
+	while(1) {
+		;
+	}
+
 	// if ((fd = open("tst", O_RDWR | O_CREAT, 0644)) < 0) {
     //     fprintf(stderr, "Unable to open\n");
     //     res = -1;

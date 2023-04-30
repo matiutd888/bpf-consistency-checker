@@ -15,6 +15,10 @@ int main(int argc, char **argv)
         goto cleanup;
     }
 
+	while(1) {
+		;
+	}
+
 	// int checksum;
 	// size_t size;
 	// off_t offset;
