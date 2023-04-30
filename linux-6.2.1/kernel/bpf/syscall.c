@@ -3138,13 +3138,14 @@ static int bpf_tracing_prog_attach(struct bpf_prog *prog,
 			goto out_unlock;
 
 	
-		printk(KERN_INFO "[MATI] bpf_tracing_prog_attach: getting trampoline key...\n");
+		printk(KERN_INFO "[MATI] bpf_tracing_prog_attach: getting trampoline by key...\n");
 		
 		tr = bpf_trampoline_get(key, &tgt_info);
 		if (!tr) {
 			err = -ENOMEM;
 			goto out_unlock;
 		}
+        printk(KERN_INFO "[MATI] bpf_tracing_prog_attach: bpf_check_attach_target ended, tgt_info loaded with tname=%s\n", tgt_info.tgt_name);
 		printk(KERN_INFO "[MATI] bpf_tracing_prog_attach: getting trampoline finished correctly!\n");
 	} else {
 		printk(KERN_INFO "[MATI] bpf_tracing_prog_attach: other way; will use dst_Trampoline from prog->aux..\n");
