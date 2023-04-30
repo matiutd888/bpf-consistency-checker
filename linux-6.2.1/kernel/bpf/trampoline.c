@@ -527,6 +527,8 @@ static enum bpf_tramp_prog_type bpf_attach_type_to_tramp(struct bpf_prog *prog)
 			return BPF_TRAMP_FEXIT;
 		else
 			return BPF_TRAMP_MODIFY_RETURN;
+	case BPF_CHECKER:
+		return BPF_TRAMP_MODIFY_RETURN;
 	default:
 		return BPF_TRAMP_REPLACE;
 	}
