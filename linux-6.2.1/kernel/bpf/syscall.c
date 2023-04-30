@@ -3136,8 +3136,8 @@ static int bpf_tracing_prog_attach(struct bpf_prog *prog,
 		err = bpf_check_attach_target(NULL, prog, tgt_prog, btf_id,
 					      &tgt_info);
 				
-		printk(KERN_INFO "[MATI] bpf_tracing_prog_attach: target filled: tgt_prog->tname=%s, addr=%lu\n", tgt_info.tgt_name, 
-					      tgt_info.tgt_addr);
+		// printk(KERN_INFO "[MATI] bpf_tracing_prog_attach: target filled: tgt_prog->tname=%s, addr=%lu\n", tgt_info.tgt_name, 
+					//       tgt_info.tgt_addr);
 		if (err)
 			goto out_unlock;
 

@@ -529,9 +529,9 @@ static enum bpf_tramp_prog_type bpf_attach_type_to_tramp(struct bpf_prog *prog)
 			return BPF_TRAMP_MODIFY_RETURN;
 	case BPF_CHECKER:
 		// TODO
-		printk(KERN_INFO "[MATI] bpf_attach_type_to_tramp: !(prog->aux->attach_func_proto->type): %d, prog->aux->attach_func_proto->type == NULL: %d\n", !(prog->aux->attach_func_proto->type), prog->aux->attach_func_proto == NULL);
-		printk(KERN_INFO "[MATI] bpf_attach_type_to_tramp: setting bpf_tramp_prog_type to modify_return\n");
-		return BPF_TRAMP_MODIFY_RETURN;
+		printk(KERN_INFO "[MATI] bpf_attach_type_to_tramp: prog->aux->attach_func_proto == NULL: %d\n", prog->aux->attach_func_proto == NULL);
+		printk(KERN_INFO "[MATI] bpf_attach_type_to_tramp: setting bpf_tramp_prog_type to modify return\n");
+		return BPF_MODIFY_RETURN;
 	// MATI tu decydujemy jak to zostanie podpięte
 	default:
 		return BPF_TRAMP_REPLACE;

@@ -16685,7 +16685,7 @@ int bpf_check_attach_target(struct bpf_verifier_log *log,
 					tname);
 				return -ENOENT;
 			}
-			printk(KERN_INFO "[MATI] bpf_check_attach_target: addr %ul of target prog found by tname: %s\n", addr, tname);
+			// printk(KERN_INFO "[MATI] bpf_check_attach_target: addr %lu of target prog found by tname: %s\n", addr, tname);
 		}
 
 		if (prog->aux->sleepable) {
