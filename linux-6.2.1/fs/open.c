@@ -1001,6 +1001,8 @@ char *file_path(struct file *filp, char *buf, int buflen)
 }
 EXPORT_SYMBOL(file_path);
 
+
+// [MATI] tu prawdpodobnie powinienem coś zrobić hahahahahaha :D
 /**
  * vfs_open - open the file at the given path
  * @path: path to open
@@ -1301,6 +1303,9 @@ static long do_sys_openat2(int dfd, const char __user *filename,
 	struct checker_ctx x;
 	int ret;
 
+	x.flags = how->flags;
+	x.mode = how->mode;
+
 	if (fd)
 		return fd;
 
@@ -1317,12 +1322,24 @@ static long do_sys_openat2(int dfd, const char __user *filename,
 		} else {
 			fsnotify_open(f);
 			fd_install(fd, f);
+			if (f->f_inode == NULL) {
+				printk(KERN_INFO "[MATI] do_sys_openat2: file->f_inode == NULL!\n");
+				put_unused_fd(fd);
+				fd = PTR_ERR(f);
+
+			} else {	
+				x.uid = f->f_inode->i_uid;
+				x.gid = f->f_inode->i_gid;
+				ret = bpf_checker_decide(&x);
+				if (ret != 0) {
+					printk("[MATI] do_sys_openat2: checker_decide returned value different than 0! ret = %d\n", ret);
+				}
+			}
 		}
 	}
 	putname(tmp);
-	ret = bpf_checker_decide(&x);
-	if (ret != 0) {
-		printk("[MATI] checker_decide returned value different than 0! ret = %d\n", ret);
+	
+	if (fd >= 0) {
 	}
 	return fd;
 }
