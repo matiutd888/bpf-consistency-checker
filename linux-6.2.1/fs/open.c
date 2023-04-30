@@ -1327,12 +1327,17 @@ static long do_sys_openat2(int dfd, const char __user *filename,
 				put_unused_fd(fd);
 				fd = PTR_ERR(f);
 
-			} else {	
+			} else {
 				x.uid = f->f_inode->i_uid;
 				x.gid = f->f_inode->i_gid;
 				ret = bpf_checker_decide(&x);
 				if (ret != 0) {
 					printk("[MATI] do_sys_openat2: checker_decide returned value different than 0! ret = %d\n", ret);
+				}
+				if (ret < 0) {
+					printk("[MATI] do_sys_openat2: checker_decide returned less than 0! ret = %d\n", ret);
+				} else {
+					atomic_set(&f->checker_count, ret);
 				}
 			}
 		}

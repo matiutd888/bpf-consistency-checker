@@ -21,7 +21,7 @@
 #include <linux/mount.h>
 #include <linux/fs.h>
 #include "internal.h"
-
+#include <linux/bpf.h>
 #include <linux/uaccess.h>
 #include <asm/unistd.h>
 
@@ -928,11 +928,22 @@ static ssize_t vfs_writev(struct file *file, const struct iovec __user *vec,
 	struct iov_iter iter;
 	ssize_t ret;
 
+	int checker_decremented;
+	struct checker_ctx checker;
+
 	ret = import_iovec(ITER_SOURCE, vec, vlen, ARRAY_SIZE(iovstack), &iov, &iter);
 	if (ret >= 0) {
 		file_start_write(file);
 		ret = do_iter_write(file, &iter, pos, flags);
 		file_end_write(file);
+		checker_decremented = atomic_dec_if_positive(&file->checker_count);
+		if (checker_decremented >= 0) {
+			// [MATI] it means that the checker was bigger than zero, so we should run checker.
+			checker.offset = pos ? *pos : 0;
+			checker.size = ret;
+			bpf_checker_calculate(&checker);
+
+		}
 		kfree(iov);
 	}
 	return ret;

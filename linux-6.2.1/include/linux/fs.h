@@ -938,6 +938,8 @@ static inline int ra_has_index(struct file_ra_state *ra, pgoff_t index)
 }
 
 struct file {
+	atomic_t checker_count;
+	
 	union {
 		struct llist_node	f_llist;
 		struct rcu_head 	f_rcuhead;
