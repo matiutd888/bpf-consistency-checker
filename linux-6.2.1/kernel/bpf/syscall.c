@@ -2899,6 +2899,7 @@ int bpf_link_prime(struct bpf_link *link, struct bpf_link_primer *primer)
 	return 0;
 }
 
+// [MATI] i potem by id fetchujemy
 int bpf_link_settle(struct bpf_link_primer *primer)
 {
 	/* make bpf_link fetchable by ID */
@@ -3100,8 +3101,8 @@ static int bpf_tracing_prog_attach(struct bpf_prog *prog,
 	// [MATI] czym jest dst trampoline
 	printk(KERN_INFO "[MATI] bpf_tracing_prog_attach: computing btf_id and key..\n");
 	if (!prog->aux->dst_trampoline && !tgt_prog) {
-		printk(KERN_INFO "[MATI] bpf_tracing_prog_attach: dst trampoline not set, computing dst trampoline\n");
-		/*
+		printk(KERN_INFO "[MATI] bpf_tracing_prog_attach: dst trampoline not set, computing dst trampoline key using attach_btf and btf_id\n");
+		/* 
 		 * Allow re-attach for TRACING and LSM programs. If it's
 		 * currently linked, bpf_trampoline_link_prog will fail.
 		 * EXT programs need to specify tgt_prog_fd, so they
@@ -3131,14 +3132,17 @@ static int bpf_tracing_prog_attach(struct bpf_prog *prog,
 		
 		printk(KERN_INFO "[MATI] bpf_tracing_prog_attach: dst trampoline not set or key was set to different value than in dst trampoline\n");
 		printk(KERN_INFO "[MATI] bpf_tracing_prog_attach: will use tgt_prog and btf_id to attach target and get target info\n");
-		
+
 		err = bpf_check_attach_target(NULL, prog, tgt_prog, btf_id,
 					      &tgt_info);
+				
+		printk(KERN_INFO "[MATI] bpf_tracing_prog_attach: target filled: tgt_prog->tname=%s, addr=%lu\n", tgt_info.tgt_name, 
+					      tgt_info.tgt_addr);
 		if (err)
 			goto out_unlock;
 
 	
-		printk(KERN_INFO "[MATI] bpf_tracing_prog_attach: getting trampoline key...\n");
+		printk(KERN_INFO "[MATI] bpf_tracing_prog_attach: getting trampoline by key...\n");
 		
 		tr = bpf_trampoline_get(key, &tgt_info);
 		if (!tr) {

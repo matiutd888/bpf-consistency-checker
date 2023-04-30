@@ -16685,6 +16685,7 @@ int bpf_check_attach_target(struct bpf_verifier_log *log,
 					tname);
 				return -ENOENT;
 			}
+			printk(KERN_INFO "[MATI] bpf_check_attach_target: addr %ul of target prog found by tname: %s\n", addr, tname);
 		}
 
 		if (prog->aux->sleepable) {
@@ -16716,7 +16717,7 @@ int bpf_check_attach_target(struct bpf_verifier_log *log,
 					ret = 0;
 				break;
 			case BPF_PROG_TYPE_CHECKER:
-				printk("[MATI] bpf_check_attach_target: checker type sleepable!\n");
+				printk(KERN_INFO "[MATI] bpf_check_attach_target: checker type sleepable!\n");
 				break;
 			default:
 				break;
