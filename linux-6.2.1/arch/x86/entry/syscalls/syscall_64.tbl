@@ -372,8 +372,12 @@
 448	common	process_mrelease	sys_process_mrelease
 449	common	futex_waitv		sys_futex_waitv
 450	common	set_mempolicy_home_node	sys_set_mempolicy_home_node
+451 common  last_checksum   sys_last_checksum 
+452 common  get_checksum   sys_get_checksum 
+453 common  count_checksums   sys_count_checksums 
+454 common  reset_checksums   sys_reset_checksums 
 
-#
+# 
 # Due to a historical design error, certain syscalls are numbered differently
 # in x32 as compared to native x86_64.  These syscalls have numbers 512-547.
 # Do not add new syscalls to this range.  Numbers 548 and above are available
