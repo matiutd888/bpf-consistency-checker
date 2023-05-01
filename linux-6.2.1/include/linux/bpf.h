@@ -971,8 +971,6 @@ struct bpf_tramp_run_ctx;
  *      fexit = a set of program to run after original function
  */
 
-// [MATI] dodanie by było w vmlinux.h
-struct checker_ctx;
 struct bpf_tramp_image;
 int arch_prepare_bpf_trampoline(struct bpf_tramp_image *tr, void *image, void *image_end,
 				const struct btf_func_model *m, u32 flags,
@@ -990,8 +988,35 @@ typedef void (*bpf_trampoline_exit_t)(struct bpf_prog *prog, u64 start,
 				      struct bpf_tramp_run_ctx *run_ctx);
 bpf_trampoline_enter_t bpf_trampoline_enter(const struct bpf_prog *prog);
 bpf_trampoline_exit_t bpf_trampoline_exit(const struct bpf_prog *prog);
+
+
+
+
+struct checker_ctx {
+  union {
+     /* write */
+     struct {
+         loff_t offset;
+         size_t size;
+     };
+     /* open */
+     struct {
+         u64 flags; /* open flags */
+         umode_t mode; /* inode mode */
+         kuid_t uid; /* owner */
+         kgid_t gid; /* group */
+     };
+  };
+};
+
 int bpf_checker_decide(struct checker_ctx *ctx);
 int bpf_checker_calculate(struct checker_ctx *ctx);
+
+
+asmlinkage int sys_last_checksum(int fd, int * checksum, size_t * size, off_t * offset);
+asmlinkage int sys_get_checksum(int fd, size_t size, off_t offset, int * checksum);
+asmlinkage int sys_count_checksums(int fd);
+asmlinkage int sys_reset_checksums(int fd);
 
 struct bpf_ksym {
 	unsigned long		 start;
@@ -1021,24 +1046,6 @@ struct bpf_tramp_image {
 		struct work_struct work;
 	};
 };
-
-struct checker_ctx {
-  union {
-     /* write */
-     struct {
-         loff_t offset;
-         size_t size;
-     };
-     /* open */
-     struct {
-         u64 flags; /* open flags */
-         umode_t mode; /* inode mode */
-         kuid_t uid; /* owner */
-         kgid_t gid; /* group */
-     };
-  };
-};	
-
 
 struct bpf_trampoline {
 	/* hlist for trampoline_table */
