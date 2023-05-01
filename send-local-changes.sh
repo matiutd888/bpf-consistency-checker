@@ -21,9 +21,9 @@
 
 
 function send {
-rsync $1 --exclude "*.o.d" --exclude "*.o"  -rvuhP z2-tst-public zso-root:zso-2/
+rsync $1 --exclude "*.o.d" --exclude "*.o" --exclude "*.so.1" --exclude "*.so" --exclude "*.sh" --exclude "*.S" --exclude "*.dts" -rvuhP z2-tst-public zso-root:zso-2/
 echo "test synced"
-rsync $1 --exclude "*.o.d" --exclude "*.o" -rvuhP linux-6.2.1 zso-root:zso-2/
+rsync $1 --exclude "*.o.d" --exclude "*.o" --exclude "*.so.1" --exclude "*.so" --exclude "*.sh" --exclude "*.S" --exclude "*.dts" -rvuhP linux-6.2.1 zso-root:zso-2/
 }
 
 if [ "$1" = "-d" ]; then
