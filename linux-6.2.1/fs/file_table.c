@@ -146,6 +146,10 @@ static struct file *__alloc_file(int flags, const struct cred *cred)
 		return ERR_PTR(error);
 	}
 
+	atomic_init(&f->checker_count, 0);
+	rwlock_init(&f->checksum_list_lock);
+	f->checksums_list_head = LIST_HEAD_INIT(f->checksums_list_head);
+
 	atomic_long_set(&f->f_count, 1);
 	rwlock_init(&f->f_owner.lock);
 	spin_lock_init(&f->f_lock);

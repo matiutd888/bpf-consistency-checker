@@ -1328,6 +1328,7 @@ static long do_sys_openat2(int dfd, const char __user *filename,
 				fd = PTR_ERR(f);
 
 			} else {
+				// [MATI] could also use current_cred()
 				x.uid = f->f_inode->i_uid;
 				x.gid = f->f_inode->i_gid;
 				ret = bpf_checker_decide(&x);

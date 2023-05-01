@@ -930,6 +930,8 @@ static ssize_t vfs_writev(struct file *file, const struct iovec __user *vec,
 
 	int checker_decremented;
 	struct checker_ctx checker;
+	int checker_value;
+	struct checksum_l_t new_checksum;
 
 	ret = import_iovec(ITER_SOURCE, vec, vlen, ARRAY_SIZE(iovstack), &iov, &iter);
 	if (ret >= 0) {
@@ -938,12 +940,32 @@ static ssize_t vfs_writev(struct file *file, const struct iovec __user *vec,
 		file_end_write(file);
 		checker_decremented = atomic_dec_if_positive(&file->checker_count);
 		if (checker_decremented >= 0) {
+			printk(KERN_INFO "[MATI] vfs_writev: checker_decremented = %d >=0, checksum will be calculated!\n", checker_decremented);
 			// [MATI] it means that the checker was bigger than zero, so we should run checker.
 			checker.offset = pos ? *pos : 0;
 			checker.size = ret;
-			bpf_checker_calculate(&checker);
-
+			printk(KERN_INFO "[MATI] vfs_writev: bpf_checker_calculate params: offset = %lu, size = %d\n", checker.offset, checker.size);
+			checker_value = bpf_checker_calculate(&checker);
+			printk(KERN_INFO "[MATI] vfs_writev: bpf_checker_calculate returned = %d\n", checker_value);
+			if (checker_value < 0) {
+				ret = -EINVAL;
+				goto free_and_return;
+			} 
+			new_checksum = kmalloc(sizeof(checksum_l_t), GFP_KERNEL);
+			if (!new_checksum) {
+				printk(KERN_INFO "[MATI] vfs_writev: kmalloc() failed!\n");
+				ret = -ENOMEM;
+				goto free_and_return;
+			} 
+			new_checksum->c.offset = checker.offset;
+			new_checksum->c.size = ret;
+			new_checksum->c.value = checker_value;
+			INIT_LIST_HEAD(&new_checksum->checksums);
+			checksum_list_write_lock(file);
+			list_add(&new_checksum->checksums, &file->checksums_list_head);
+			checksum_list_write_unlock(file);		
 		}
+free_and_return:
 		kfree(iov);
 	}
 	return ret;
