@@ -51,8 +51,21 @@ static void file_free_rcu(struct rcu_head *head)
 	kmem_cache_free(filp_cachep, f);
 }
 
+// [MATI] TODO co z lockami, czy moge ich używać
+static void free_checksum_list(struct file *f) {
+	checksum_list_write_lock(f);
+	struct checksums_l_t *curr;
+	struct checksums_l_t *next;
+	list_for_each_entry_safe(curr, next, &f->checksums, checksums) {
+		list_del(&curr->checksums);
+		free(curr);
+	}
+	checksum_list_write_unlock(f);
+}
+
 static inline void file_free(struct file *f)
 {
+	free_checksum_list(f);
 	security_file_free(f);
 	if (!(f->f_mode & FMODE_NOACCOUNT))
 		percpu_counter_dec(&nr_files);
