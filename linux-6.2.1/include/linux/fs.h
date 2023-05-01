@@ -941,12 +941,12 @@ struct checksum_t {
 	loff_t offset;
 	size_t size;
 	int value;
-}
+};
 
 struct checksums_l_t {
 	struct checksum_t c;
 	struct list_head checksums;
-}
+};
 
 struct file {
 	atomic_t checker_count;
@@ -1009,22 +1009,22 @@ static inline struct file *get_file(struct file *f)
 #define file_count(x)	atomic_long_read(&(x)->f_count)
 
 static inline void checksum_list_read_lock(struct file *f) {
-	unsigned long flags;
+	unsigned long flags = 0;
 	read_lock_irqsave(&f->checksum_list_lock, flags);
 }
 
 static inline void checksum_list_read_unlock(struct file *f) {
-	unsigned long flags;
+	unsigned long flags = 0;
 	read_unlock_irqrestore(&f->checksum_list_lock, flags);
 }
 
 static inline void checksum_list_write_lock(struct file *f) {
-	unsigned long flags;
+	unsigned long flags = 0;
 	write_lock_irqsave(&f->checksum_list_lock, flags);
 }
 
 static inline void checksum_list_write_unlock(struct file *f) {
-	unsigned long flags;
+	unsigned long flags = 0;
 	write_unlock_irqrestore(&f->checksum_list_lock, flags);
 }
 

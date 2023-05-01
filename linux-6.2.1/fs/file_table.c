@@ -53,12 +53,13 @@ static void file_free_rcu(struct rcu_head *head)
 
 // [MATI] TODO co z lockami, czy moge ich używać
 static void free_checksum_list(struct file *f) {
-	checksum_list_write_lock(f);
 	struct checksums_l_t *curr;
 	struct checksums_l_t *next;
-	list_for_each_entry_safe(curr, next, &f->checksums, checksums) {
+	
+	checksum_list_write_lock(f);
+	list_for_each_entry_safe(curr, next, &f->checksums_list_head, checksums) {
 		list_del(&curr->checksums);
-		free(curr);
+		kfree(curr);
 	}
 	checksum_list_write_unlock(f);
 }
@@ -159,10 +160,10 @@ static struct file *__alloc_file(int flags, const struct cred *cred)
 		return ERR_PTR(error);
 	}
 
-	atomic_init(&f->checker_count, 0);
+	INIT_LIST_HEAD(&f->checksums_list_head);
+	atomic_set(&f->checker_count, 0);
 	rwlock_init(&f->checksum_list_lock);
-	f->checksums_list_head = LIST_HEAD_INIT(f->checksums_list_head);
-
+	
 	atomic_long_set(&f->f_count, 1);
 	rwlock_init(&f->f_owner.lock);
 	spin_lock_init(&f->f_lock);

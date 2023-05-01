@@ -34,6 +34,9 @@ const struct file_operations generic_ro_fops = {
 
 EXPORT_SYMBOL(generic_ro_fops);
 
+
+static ssize_t calculate_checksum(struct file *file, int bytes_written, loff_t *pos);
+
 static inline bool unsigned_offsets(struct file *file)
 {
 	return file->f_mode & FMODE_UNSIGNED_OFFSET;
@@ -561,9 +564,49 @@ ssize_t kernel_write(struct file *file, const void *buf, size_t count,
 }
 EXPORT_SYMBOL(kernel_write);
 
+static ssize_t calculate_checksum(struct file *file, int bytes_written, loff_t *pos) {
+	int checker_decremented;
+	struct checker_ctx checker;
+	int checker_value;
+	struct checksums_l_t *new_checksum;
+	
+	if (bytes_written < 0) {
+		return bytes_written;
+	}
+
+	// [MATI] TODO czy rozmiar zero też przesyłać??? 
+	checker_decremented = atomic_dec_if_positive(&file->checker_count);
+	if (checker_decremented >= 0) {
+		printk(KERN_INFO "[MATI] calculate_checksum: checker_decremented = %d >=0, checksum will be calculated!\n", checker_decremented);
+		// [MATI] it means that the checker was bigger than zero, so we should run checker.
+		checker.offset = pos ? *pos : 0;
+		checker.size = bytes_written;
+		printk(KERN_INFO "[MATI] calculate_checksum: bpf_checker_calculate params: offset = %lld, size = %zu\n", checker.offset, checker.size);
+		checker_value = bpf_checker_calculate(&checker);
+		printk(KERN_INFO "[MATI] calculate_checksum: bpf_checker_calculate returned = %d\n", checker_value);
+		if (checker_value < 0) {
+			return -EINVAL;
+		} 
+		new_checksum = kmalloc(sizeof(struct checksums_l_t), GFP_KERNEL);
+		if (!new_checksum) {
+			printk(KERN_INFO "[MATI] calculate_checksum: kmalloc() failed!\n");
+			return -ENOMEM;
+		} 
+		new_checksum->c.offset = checker.offset;
+		new_checksum->c.size = bytes_written;
+		new_checksum->c.value = checker_value;
+		INIT_LIST_HEAD(&new_checksum->checksums);
+		checksum_list_write_lock(file);
+		list_add(&new_checksum->checksums, &file->checksums_list_head);
+		checksum_list_write_unlock(file);
+	}
+	return 0;
+}
+
 ssize_t vfs_write(struct file *file, const char __user *buf, size_t count, loff_t *pos)
 {
 	ssize_t ret;
+	int checksum_calculating_res;
 
 	if (!(file->f_mode & FMODE_WRITE))
 		return -EBADF;
@@ -584,10 +627,15 @@ ssize_t vfs_write(struct file *file, const char __user *buf, size_t count, loff_
 		ret = new_sync_write(file, buf, count, pos);
 	else
 		ret = -EINVAL;
+	
 	if (ret > 0) {
 		fsnotify_modify(file);
 		add_wchar(current, ret);
 	}
+	if ((checksum_calculating_res = calculate_checksum(file, ret, pos)) < 0) {
+		ret = checksum_calculating_res;
+	}
+
 	inc_syscw(current);
 	file_end_write(file);
 	return ret;
@@ -927,45 +975,17 @@ static ssize_t vfs_writev(struct file *file, const struct iovec __user *vec,
 	struct iovec *iov = iovstack;
 	struct iov_iter iter;
 	ssize_t ret;
+	int checksum_calculating_res;
 
-	int checker_decremented;
-	struct checker_ctx checker;
-	int checker_value;
-	struct checksum_l_t new_checksum;
 
 	ret = import_iovec(ITER_SOURCE, vec, vlen, ARRAY_SIZE(iovstack), &iov, &iter);
 	if (ret >= 0) {
 		file_start_write(file);
 		ret = do_iter_write(file, &iter, pos, flags);
-		file_end_write(file);
-		checker_decremented = atomic_dec_if_positive(&file->checker_count);
-		if (checker_decremented >= 0) {
-			printk(KERN_INFO "[MATI] vfs_writev: checker_decremented = %d >=0, checksum will be calculated!\n", checker_decremented);
-			// [MATI] it means that the checker was bigger than zero, so we should run checker.
-			checker.offset = pos ? *pos : 0;
-			checker.size = ret;
-			printk(KERN_INFO "[MATI] vfs_writev: bpf_checker_calculate params: offset = %lu, size = %d\n", checker.offset, checker.size);
-			checker_value = bpf_checker_calculate(&checker);
-			printk(KERN_INFO "[MATI] vfs_writev: bpf_checker_calculate returned = %d\n", checker_value);
-			if (checker_value < 0) {
-				ret = -EINVAL;
-				goto free_and_return;
-			} 
-			new_checksum = kmalloc(sizeof(checksum_l_t), GFP_KERNEL);
-			if (!new_checksum) {
-				printk(KERN_INFO "[MATI] vfs_writev: kmalloc() failed!\n");
-				ret = -ENOMEM;
-				goto free_and_return;
-			} 
-			new_checksum->c.offset = checker.offset;
-			new_checksum->c.size = ret;
-			new_checksum->c.value = checker_value;
-			INIT_LIST_HEAD(&new_checksum->checksums);
-			checksum_list_write_lock(file);
-			list_add(&new_checksum->checksums, &file->checksums_list_head);
-			checksum_list_write_unlock(file);		
+		if ((checksum_calculating_res = calculate_checksum(file, ret, pos)) < 0) {
+			ret = checksum_calculating_res;
 		}
-free_and_return:
+		file_end_write(file);
 		kfree(iov);
 	}
 	return ret;
