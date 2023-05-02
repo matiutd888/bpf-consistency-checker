@@ -23,7 +23,7 @@
 function send {
 rsync $1 --exclude "*.o.d" --exclude "linux-6.2.1/scripts/*" --exclude "linux-6.2.1/.vmlinux.objs" --exclude "*.o" --exclude "*.so.1" --exclude "*.so" --exclude "*.sh" --exclude "*.S" --exclude "*.dts" -rvuhP z2-tst-public zso-root:zso-2/
 echo "test synced"
-rsync $1 --exclude "*.o.d" --exclude "linux-6.2.1/scripts/*" --exclude "linux-6.2.1/.vmlinux.objs" --exclude "linux-6.2.1/..vmlinux.objs.*" --exclude "linux-6.2.1/compile_commands.json" --exclude "linux-6.2.1/kernel/module/.version.o.cmd" --exclude "*.o" --exclude "*.so.1" --exclude "*.so" --exclude "*.sh" --exclude "*.S" --exclude "*.dts" -rvuhP linux-6.2.1 zso-root:zso-2/
+rsync $1 --exclude "*.o.d" --exclude "linux-6.2.1/scripts/*" --exclude "linux-6.2.1/.vmlinux.objs" --exclude "linux-6.2.1/..vmlinux.objs.*" --exclude "linux-6.2.1/compile_commands.json" --exclude "linux-6.2.1/kernel/module/.version.o.cmd" --exclude "*.o" --exclude "*.s" --exclude "*.so.1" --exclude "*.so" --exclude "*.sh" --exclude "*.S" --exclude "*.dts" -rvuhP linux-6.2.1 zso-root:zso-2/
 }
 
 if [ "$1" = "-d" ]; then
