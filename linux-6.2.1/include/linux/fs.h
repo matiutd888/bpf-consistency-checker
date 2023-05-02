@@ -1029,6 +1029,21 @@ static inline void checksum_list_write_unlock(struct file *f) {
 }
 
 
+
+// [MATI] TODO co z lockami, czy moge ich używać
+static inline void free_checksum_list(struct file *f) {
+	struct checksums_l_t *curr;
+	struct checksums_l_t *next;
+	
+	checksum_list_write_lock(f);
+	list_for_each_entry_safe(curr, next, &f->checksums_list_head, checksums) {
+		list_del(&curr->checksums);
+		kfree(curr);
+	}
+	checksum_list_write_unlock(f);
+}
+
+
 #define	MAX_NON_LFS	((1UL<<31) - 1)
 
 /* Page cache limit. The filesystems should put that into their s_maxbytes 

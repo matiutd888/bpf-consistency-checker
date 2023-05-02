@@ -1,45 +1,104 @@
 #include <linux/bpf.h>
 #include "bpf_checker.h"
 #include <linux/syscalls.h>
+#include <linux/fs.h>
+#include <linux/list.h>
+#include <linux/file.h>
+
+extern void free_checksum_list(struct file *f);
+// struct checksums_l_t;
+// struct file;
+// struct checksum_t;
 
 
-// [MATI] TODO co z lockami, czy moge ich używać
-// static void free_checksum_list(struct file *f) {
-// 	struct checksums_l_t *curr;
-// 	struct checksums_l_t *next;
-	
-// 	checksum_list_write_lock(f);
-// 	list_for_each_entry_safe(curr, next, &f->checksums_list_head, checksums) {
-// 		list_del(&curr->checksums);
-// 		kfree(curr);
-// 	}
-// 	checksum_list_write_unlock(f);
-// }
 
-SYSCALL_DEFINE4(last_checksum, int, fd, int *, checksum, size_t *, size, off_t *, offset)
+SYSCALL_DEFINE4(last_checksum, int, fd, int *, checksum, size_t *, size,
+		off_t *, offset)
 {
-	printk(KERN_INFO "[MATI] last_checksum: hello world!\n");
+	struct file *f;
+	struct list_head *l;
+	struct checksums_l_t *last_entry_checksum;
+
+	f = fget(fd);
+	if (!f) {
+		return -EINVAL;
+	}
+	checksum_list_read_lock(f);
+	l = &f->checksums_list_head;	
+	if (list_empty(l)) {
+		checksum_list_read_unlock(f);
+		return -EINVAL;
+	}
+	last_entry_checksum = list_last_entry(l, struct checksums_l_t, checksums);
+	if (!last_entry_checksum) {
+		printk(KERN_INFO "[MATI] last_checksum: unexpected NULL when getting list_last_entry!\n");
+	}
+	*checksum = last_entry_checksum->c.value;
+	*size = last_entry_checksum->c.size;;
+	*offset = last_entry_checksum->c.offset;
+	checksum_list_read_unlock(f);
+	
 	return 0;
 }
 
-SYSCALL_DEFINE4(get_checksum, int, fd, size_t, size, off_t, offset, int *, checksum)
+SYSCALL_DEFINE4(get_checksum, int, fd, size_t, size, off_t, offset, int *,
+		checksum)
 {
-	printk(KERN_INFO "[MATI] get_checksum: hello world!\n");
-	return 0;
+	struct file *f;
+	struct checksums_l_t *entry_it;
+	int ret;
+	
+	ret = -1;
+	f = fget(fd);
+	if (!f) {
+		return -EINVAL;
+	}
+	checksum_list_read_lock(f);
+	printk(KERN_INFO "[MATI] get_checksum: searching for size=%zu, offset=%ld\n", size, offset);
+	list_for_each_entry_reverse(entry_it, &f->checksums_list_head, checksums) {
+		printk(KERN_INFO "[MATI] get_checksum: iterating, size=%zu, offset=%lld\n", entry_it->c.size, entry_it->c.offset);
+		if (entry_it->c.size == size && entry_it->c.offset == offset) {
+			printk(KERN_INFO "[MATI] found!\n");
+			ret = entry_it->c.value;
+			break;
+		}
+	}
+	checksum_list_read_unlock(f);
+	return ret;
 }
 
 SYSCALL_DEFINE1(count_checksums, int, fd)
 {
+	struct file *f;
+	struct list_head *pos;
+	size_t s;
 	printk(KERN_INFO "[MATI] count_checksums: hello world!\n");
-	return 0;
+	f = fget(fd);
+	if (!f) {
+		return -EINVAL;
+	}
+	s = 0;
+	checksum_list_read_lock(f);
+	list_for_each(pos, &f->checksums_list_head) {
+		s++;
+	}
+	checksum_list_read_unlock(f);
+	return s;
 }
 
 SYSCALL_DEFINE1(reset_checksums, int, fd)
 {
-	printk(KERN_INFO "[MATI] reset_checksum: hello world!\n");
+	struct file *f;
+	if (fd < 0) {
+		return -EINVAL;
+	}
+	f = fget(fd);
+	if (!f) {
+		return -EINVAL;
+	}
+	free_checksum_list(f);
 	return 0;
 }
-
 
 int bpf_checker_decide(struct checker_ctx *ctx)
 {
@@ -58,7 +117,6 @@ int bpf_checker_calculate(struct checker_ctx *ctx)
 // static const struct bpf_func_proto *bpf_checker_func_proto(enum bpf_func_id func_id, const struct bpf_prog *prog) {
 // 	return tracing_prog_func_proto(func_id, prog);
 // }
-
 
 const struct bpf_prog_ops checker_prog_ops = {};
 
