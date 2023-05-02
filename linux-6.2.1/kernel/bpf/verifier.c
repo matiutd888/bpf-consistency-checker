@@ -7720,6 +7720,7 @@ static void update_loop_inline_state(struct bpf_verifier_env *env, u32 subprogno
 				 state->callback_subprogno == subprogno);
 }
 
+// [MATI] trzeba zbadać co się wykonuje przy unknown_func
 static int check_helper_call(struct bpf_verifier_env *env, struct bpf_insn *insn,
 			     int *insn_idx_p)
 {
@@ -7741,8 +7742,12 @@ static int check_helper_call(struct bpf_verifier_env *env, struct bpf_insn *insn
 		return -EINVAL;
 	}
 
-	if (env->ops->get_func_proto)
+	if (env->ops->get_func_proto) {
+		printk(KERN_INFO "[MATI] check_helper_call: env->ops->get_func_proto NOT null!\n");
 		fn = env->ops->get_func_proto(func_id, env->prog);
+	} else {
+		printk(KERN_INFO "[MATI] check_helper_call: env->ops->get_func_proto IS null!\n");
+	}
 	if (!fn) {
 		verbose(env, "unknown func %s#%d\n", func_id_name(func_id),
 			func_id);

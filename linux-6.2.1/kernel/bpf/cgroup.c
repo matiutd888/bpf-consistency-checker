@@ -1603,6 +1603,8 @@ cgroup_dev_func_proto(enum bpf_func_id func_id, const struct bpf_prog *prog)
 {
 	const struct bpf_func_proto *func_proto;
 
+	printk(KERN_INFO "[MATI] cgroup_dev_func_proto: will try to get func proto by bpf_prog and func_id\n");
+
 	func_proto = cgroup_common_func_proto(func_id, prog);
 	if (func_proto)
 		return func_proto;
@@ -1615,6 +1617,7 @@ cgroup_dev_func_proto(enum bpf_func_id func_id, const struct bpf_prog *prog)
 	case BPF_FUNC_perf_event_output:
 		return &bpf_event_output_data_proto;
 	default:
+		printk(KERN_INFO "[MATI] cgroup_dev_func_proto: caling bpf_base_func_proto\n");
 		// [MATI] Dostępy programu do funkcji
 		return bpf_base_func_proto(func_id);
 	}
