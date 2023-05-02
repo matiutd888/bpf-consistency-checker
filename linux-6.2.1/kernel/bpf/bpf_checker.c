@@ -140,6 +140,29 @@ int bpf_checker_calculate(struct checker_ctx *ctx)
 	return 1;
 }
 
+
+
+/* bpf+kprobe programs can access fields of 'struct pt_regs' */
+static bool bpf_checker_prog_is_valid_access(int off, int size, enum bpf_access_type type,
+					const struct bpf_prog *prog,
+					struct bpf_insn_access_aux *info)
+{
+	printk("[MATI] bpf_checker_prog_is_valid_access:  off: %d, size: %d sizeof(checker_ctx): %zu\n", off, size, sizeof(struct checker_ctx));
+	if (off < 0 || off >= sizeof(struct checker_ctx))
+		return false;
+	if (type != BPF_READ)
+		return false;
+	if (off % size != 0)
+		return false;
+
+	// [MATI] TODO should it be uncommented????
+	// from kprobe_prog_is_valid_access
+	// if (off + size > sizeof(struct checker_ctx))
+	// 	return false;
+
+	return true;
+}
+
 // influenced by
 // bpf_lsm_func_proto(enum bpf_func_id func_id, const struct bpf_prog *prog)
 // in bpf_lsm.c
@@ -148,8 +171,10 @@ bpf_checker_func_proto(enum bpf_func_id func_id, const struct bpf_prog *prog)
 {
 	switch (func_id) {
 	case BPF_FUNC_get_current_uid_gid:
+		printk(KERN_INFO "[MATI] bpf_checker_func_proto: BPF_FUNC_get_current_uid_gid\n");	
 		return &bpf_get_current_uid_gid_proto;
 	case BPF_FUNC_get_current_pid_tgid:
+		printk(KERN_INFO "[MATI] bpf_checker_func_proto: BPF_FUNC_get_current_pid_tgid\n");	
 		return &bpf_get_current_pid_tgid_proto;
 	default:
 		return bpf_base_func_proto(func_id);
@@ -160,4 +185,5 @@ const struct bpf_prog_ops checker_prog_ops = {};
 
 const struct bpf_verifier_ops checker_verifier_ops = {
 	.get_func_proto = bpf_checker_func_proto,
+	.is_valid_access = bpf_checker_prog_is_valid_access,
 };
