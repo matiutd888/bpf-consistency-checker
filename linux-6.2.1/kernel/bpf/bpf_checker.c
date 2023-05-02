@@ -19,6 +19,10 @@ SYSCALL_DEFINE4(last_checksum, int, fd, int *, checksum, size_t *, size,
 	struct list_head *l;
 	struct checksums_l_t *last_entry_checksum;
 
+	int cs;
+	size_t ss;
+	off_t os;
+
 	f = fget(fd);
 	if (!f) {
 		return -EINVAL;
@@ -38,14 +42,23 @@ SYSCALL_DEFINE4(last_checksum, int, fd, int *, checksum, size_t *, size,
 		printk(KERN_INFO "[MATI] last_checksum: unexpected NULL when getting list_last_entry!\n");
 	}
 	printk(KERN_INFO "[MATI] last_checksum: found! %d, %zu, %lld\n", last_entry_checksum->c.value, last_entry_checksum->c.size, last_entry_checksum->c.offset);
-	*checksum = last_entry_checksum->c.value;
-	printk(KERN_INFO "[MATI] last_checksum: assignment correct! 1\n");
-	*size = last_entry_checksum->c.size;;
-	printk(KERN_INFO "[MATI] last_checksum: assignment correct! 2\n");
-	*offset = last_entry_checksum->c.offset;
-	printk(KERN_INFO "[MATI] last_checksum: assignment correct!\n");
+	cs = last_entry_checksum->c.value;
+	ss = last_entry_checksum->c.size;;
+	os = last_entry_checksum->c.offset;
 	checksum_list_read_unlock(f);
 	printk(KERN_INFO "[MATI] last_checksum: unlocked success!\n");
+	
+	if (put_user(cs, checksum)) {
+		return -EFAULT;
+	}
+	printk(KERN_INFO "[MATI] last_checksum: assignment correct! 1\n");
+	if (put_user(ss, size)) {
+		return -EFAULT;	
+	}
+	printk(KERN_INFO "[MATI] last_checksum: assignment correct! 2\n");
+	if (put_user(os, offset)) {
+		return -EFAULT;		
+	}
 	return 0;
 }
 
@@ -72,13 +85,16 @@ SYSCALL_DEFINE4(get_checksum, int, fd, size_t, size, off_t, offset, int *,
 		}
 	}
 	checksum_list_read_unlock(f);
-	return ret;
+	if (put_user(ret, checksum)) {
+		return -EFAULT;
+	}
+	return 0;
 }
 
 SYSCALL_DEFINE1(count_checksums, int, fd)
 {
 	struct file *f;
-	struct list_head *pos;
+	struct list_head *	pos;
 	size_t s;
 	printk(KERN_INFO "[MATI] count_checksums: hello world!\n");
 	f = fget(fd);
