@@ -35,7 +35,7 @@ const struct file_operations generic_ro_fops = {
 EXPORT_SYMBOL(generic_ro_fops);
 
 
-static ssize_t calculate_checksum(struct file *file, int bytes_written, loff_t *pos);
+static ssize_t calculate_checksum(struct file *file, int bytes_written, loff_t pos);
 
 static inline bool unsigned_offsets(struct file *file)
 {
@@ -564,7 +564,7 @@ ssize_t kernel_write(struct file *file, const void *buf, size_t count,
 }
 EXPORT_SYMBOL(kernel_write);
 
-static ssize_t calculate_checksum(struct file *file, int bytes_written, loff_t *pos) {
+static ssize_t calculate_checksum(struct file *file, int bytes_written, loff_t pos) {
 	int checker_decremented;
 	struct checker_ctx checker;
 	int checker_value;
@@ -579,7 +579,7 @@ static ssize_t calculate_checksum(struct file *file, int bytes_written, loff_t *
 	if (checker_decremented >= 0) {
 		printk(KERN_INFO "[MATI] calculate_checksum: checker_decremented = %d >=0, checksum will be calculated!\n", checker_decremented);
 		// [MATI] it means that the checker was bigger than zero, so we should run checker.
-		checker.offset = pos ? *pos : 0;
+		checker.offset = pos;
 		checker.size = bytes_written;
 		printk(KERN_INFO "[MATI] calculate_checksum: bpf_checker_calculate params: offset = %lld, size = %zu\n", checker.offset, checker.size);
 		checker_value = bpf_checker_calculate(&checker);
@@ -607,6 +607,9 @@ ssize_t vfs_write(struct file *file, const char __user *buf, size_t count, loff_
 {
 	ssize_t ret;
 	int checksum_calculating_res;
+	loff_t checker_initial_pos;
+	
+	checker_initial_pos = pos ? *pos : 0;
 
 	if (!(file->f_mode & FMODE_WRITE))
 		return -EBADF;
@@ -632,7 +635,7 @@ ssize_t vfs_write(struct file *file, const char __user *buf, size_t count, loff_
 		fsnotify_modify(file);
 		add_wchar(current, ret);
 	}
-	if ((checksum_calculating_res = calculate_checksum(file, ret, pos)) < 0) {
+	if ((checksum_calculating_res = calculate_checksum(file, ret, checker_initial_pos)) < 0) {
 		ret = checksum_calculating_res;
 	}
 
@@ -976,13 +979,15 @@ static ssize_t vfs_writev(struct file *file, const struct iovec __user *vec,
 	struct iov_iter iter;
 	ssize_t ret;
 	int checksum_calculating_res;
+	loff_t checker_initial_pos;
 
+	checker_initial_pos = pos ? *pos : 0;
 
 	ret = import_iovec(ITER_SOURCE, vec, vlen, ARRAY_SIZE(iovstack), &iov, &iter);
 	if (ret >= 0) {
 		file_start_write(file);
 		ret = do_iter_write(file, &iter, pos, flags);
-		if ((checksum_calculating_res = calculate_checksum(file, ret, pos)) < 0) {
+		if ((checksum_calculating_res = calculate_checksum(file, ret, checker_initial_pos)) < 0) {
 			ret = checksum_calculating_res;
 		}
 		file_end_write(file);
