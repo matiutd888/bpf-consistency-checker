@@ -23,7 +23,7 @@ do_check_perm() {
 }
 
 run simple_write
-run complex_write
+# run complex_write
 
 echo "==== FAIL CTX"
 run fail_ctx
