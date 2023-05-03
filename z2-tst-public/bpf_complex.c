@@ -27,7 +27,7 @@ int bpf_prog1(struct checker_ctx *ctx)
     char buf[3];
     int res = 0;
 
-    bpf_copy_to_buffer(ctx, 0, buf, 3);
+    int dupa = bpf_copy_to_buffer(ctx, 0, buf, 3);
     for (int i = 0; i < 3; i++) {
         res += buf[i];
     }

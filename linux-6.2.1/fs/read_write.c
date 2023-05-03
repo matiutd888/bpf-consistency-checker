@@ -566,7 +566,7 @@ EXPORT_SYMBOL(kernel_write);
 
 static ssize_t calculate_checksum(struct file *file, int bytes_written, loff_t pos) {
 	int checker_decremented;
-	struct checker_ctx checker;
+	struct bpf_checker_ctx_with_file checker_with_file;
 	int checker_value;
 	struct checksums_l_t *new_checksum;
 	
@@ -576,13 +576,15 @@ static ssize_t calculate_checksum(struct file *file, int bytes_written, loff_t p
 
 	// [MATI] TODO czy rozmiar zero też przesyłać??? 
 	checker_decremented = atomic_dec_if_positive(&file->checker_count);
-	if (checker_decremented >= 0) {
+	if (checker_decremented >= 0) { 
 		printk(KERN_INFO "[MATI] calculate_checksum: checker_decremented = %d >=0, checksum will be calculated!\n", checker_decremented);
 		// [MATI] it means that the checker was bigger than zero, so we should run checker.
-		checker.offset = pos;
-		checker.size = bytes_written;
-		printk(KERN_INFO "[MATI] calculate_checksum: bpf_checker_calculate params: offset = %lld, size = %zu\n", checker.offset, checker.size);
-		checker_value = bpf_checker_calculate(&checker);
+		printk(KERN_INFO "[MATI] calculate_checksum: creating bpf_checker_ctx_with_file with file: %p\n", file);
+		checker_with_file.f = file;
+		checker_with_file.c.offset = pos;
+		checker_with_file.c.size = bytes_written;
+		printk(KERN_INFO "[MATI] calculate_checksum: bpf_checker_calculate params: offset = %lld, size = %zu\n", checker_with_file.c.offset, checker_with_file.c.size);
+		checker_value = bpf_checker_calculate(&checker_with_file.c);
 		printk(KERN_INFO "[MATI] calculate_checksum: bpf_checker_calculate returned = %d\n", checker_value);
 		if (checker_value < 0) {
 			return -EINVAL;
@@ -592,7 +594,7 @@ static ssize_t calculate_checksum(struct file *file, int bytes_written, loff_t p
 			printk(KERN_INFO "[MATI] calculate_checksum: kmalloc() failed!\n");
 			return -ENOMEM;
 		} 
-		new_checksum->c.offset = checker.offset;
+		new_checksum->c.offset = checker_with_file.c.offset;
 		new_checksum->c.size = bytes_written;
 		new_checksum->c.value = checker_value;
 		INIT_LIST_HEAD(&new_checksum->checksums);

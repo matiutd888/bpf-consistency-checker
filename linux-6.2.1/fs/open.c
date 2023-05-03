@@ -1300,11 +1300,11 @@ static long do_sys_openat2(int dfd, const char __user *filename,
 	struct open_flags op;
 	int fd = build_open_flags(how, &op);
 	struct filename *tmp;
-	struct checker_ctx x;
+	struct bpf_checker_ctx_with_file x_with_file;
 	int ret;
 
-	x.flags = how->flags;
-	x.mode = how->mode;
+	x_with_file.c.flags = how->flags;
+	x_with_file.c.mode = how->mode;
 
 	if (fd)
 		return fd;
@@ -1329,10 +1329,12 @@ static long do_sys_openat2(int dfd, const char __user *filename,
 
 			} else {
 				// [MATI] could also use current_cred()
-				x.uid = f->f_inode->i_uid;
-				x.gid = f->f_inode->i_gid;
-				ret = bpf_checker_decide(&x);
+				x_with_file.f = f;
+				x_with_file.c.uid = f->f_inode->i_uid;
+				x_with_file.c.gid = f->f_inode->i_gid;
+				ret = bpf_checker_decide(&x_with_file.c);
 				if (ret != 0) {
+					printk(KERN_INFO "[MATI] do_sys_openat2: bpf_checker_ctx_with_file with file: %p\n", f);
 					printk("[MATI] do_sys_openat2: checker_decide returned value different than 0! ret = %d\n", ret);
 				}
 				if (ret < 0) {

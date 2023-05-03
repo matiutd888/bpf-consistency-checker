@@ -990,8 +990,6 @@ bpf_trampoline_enter_t bpf_trampoline_enter(const struct bpf_prog *prog);
 bpf_trampoline_exit_t bpf_trampoline_exit(const struct bpf_prog *prog);
 
 
-
-
 struct checker_ctx {
   union {
      /* write */
@@ -1007,6 +1005,11 @@ struct checker_ctx {
          kgid_t gid; /* group */
      };
   };
+};
+
+struct bpf_checker_ctx_with_file {
+	struct file *f;
+	struct checker_ctx c;
 };
 
 int bpf_checker_decide(struct checker_ctx *ctx);
@@ -2708,6 +2711,7 @@ extern const struct bpf_func_proto bpf_get_retval_proto;
 extern const struct bpf_func_proto bpf_user_ringbuf_drain_proto;
 extern const struct bpf_func_proto bpf_cgrp_storage_get_proto;
 extern const struct bpf_func_proto bpf_cgrp_storage_delete_proto;
+extern const struct bpf_func_proto bpf_copy_to_buffer_proto;
 
 const struct bpf_func_proto *tracing_prog_func_proto(
   enum bpf_func_id func_id, const struct bpf_prog *prog);

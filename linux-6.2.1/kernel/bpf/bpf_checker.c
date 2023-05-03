@@ -4,6 +4,7 @@
 #include <linux/fs.h>
 #include <linux/list.h>
 #include <linux/file.h>
+#include <linux/filter.h>
 
 extern void free_checksum_list(struct file *f);
 // struct checksums_l_t;
@@ -138,16 +139,37 @@ int bpf_checker_calculate(struct checker_ctx *ctx)
 {
 	printk(KERN_INFO "[MATI] bpf_checker_calculate code is running!\n");
 	return 1;
+};
+
+
+BPF_CALL_4(bpf_copy_to_buffer, void *, ctx, unsigned long, offset, void *, ptr,
+	   unsigned long, size)
+{
+	struct bpf_checker_ctx_with_file *ctx_with_file =
+		container_of(ctx, struct bpf_checker_ctx_with_file, c);
+	printk("[MATI] bpf_copy_to_buffer: Successfully retrieved file with fd: %p\n",
+	       ctx_with_file->f);
+	return 0;
 }
 
-
+const struct bpf_func_proto bpf_copy_to_buffer_proto = {
+	.func = bpf_copy_to_buffer,
+	.gpl_only = true,
+	.ret_type = RET_INTEGER,
+	.arg1_type = ARG_ANYTHING,
+	.arg2_type = ARG_ANYTHING,
+	.arg3_type = ARG_ANYTHING,
+	.arg4_type = ARG_ANYTHING,
+};
 
 /* bpf+kprobe programs can access fields of 'struct pt_regs' */
-static bool bpf_checker_prog_is_valid_access(int off, int size, enum bpf_access_type type,
-					const struct bpf_prog *prog,
-					struct bpf_insn_access_aux *info)
+static bool bpf_checker_prog_is_valid_access(int off, int size,
+					     enum bpf_access_type type,
+					     const struct bpf_prog *prog,
+					     struct bpf_insn_access_aux *info)
 {
-	printk("[MATI] bpf_checker_prog_is_valid_access:  off: %d, size: %d sizeof(checker_ctx): %zu\n", off, size, sizeof(struct checker_ctx));
+	printk("[MATI] bpf_checker_prog_is_valid_access:  off: %d, size: %d sizeof(checker_ctx): %zu\n",
+	       off, size, sizeof(struct checker_ctx));
 	if (off < 0 || off >= sizeof(struct checker_ctx))
 		return false;
 	if (type != BPF_READ)
@@ -171,11 +193,15 @@ bpf_checker_func_proto(enum bpf_func_id func_id, const struct bpf_prog *prog)
 {
 	switch (func_id) {
 	case BPF_FUNC_get_current_uid_gid:
-		printk(KERN_INFO "[MATI] bpf_checker_func_proto: BPF_FUNC_get_current_uid_gid\n");	
+		printk(KERN_INFO
+		       "[MATI] bpf_checker_func_proto: BPF_FUNC_get_current_uid_gid\n");
 		return &bpf_get_current_uid_gid_proto;
 	case BPF_FUNC_get_current_pid_tgid:
-		printk(KERN_INFO "[MATI] bpf_checker_func_proto: BPF_FUNC_get_current_pid_tgid\n");	
+		printk(KERN_INFO
+		       "[MATI] bpf_checker_func_proto: BPF_FUNC_get_current_pid_tgid\n");
 		return &bpf_get_current_pid_tgid_proto;
+	case BPF_FUNC_copy_to_buffer:
+		return &bpf_copy_to_buffer_proto;
 	default:
 		return bpf_base_func_proto(func_id);
 	}

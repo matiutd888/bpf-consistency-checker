@@ -4727,5 +4727,5 @@ static void *(*bpf_cgrp_storage_get)(void *map, struct cgroup *cgroup, void *val
  */
 static long (*bpf_cgrp_storage_delete)(void *map, struct cgroup *cgroup) = (void *) 211;
 
-static long (*bpf_copy_to_buffer)(void *ctx, __u32 offset, const void *ptr, __u32 size) = (void *) 212;
+static int (*bpf_copy_to_buffer)(void *ctx, __u32 offset, const void *ptr, __u32 size) = (void *) 212;
 
