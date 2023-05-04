@@ -3564,8 +3564,9 @@ static int check_stack_read_fixed_off(struct bpf_verifier_env *env,
 
 	stype = reg_state->stack[spi].slot_type;
 	reg = &reg_state->stack[spi].spilled_ptr;
-
+	
 	if (is_spilled_reg(&reg_state->stack[spi])) {
+		// printk("[MATI] check_stack_read_fixed_off: is_spilled_reg()")
 		u8 spill_size = 1;
 
 		for (i = BPF_REG_SIZE - 1; i > 0 && stype[i - 1] == STACK_SPILL; i--)
@@ -3597,7 +3598,7 @@ static int check_stack_read_fixed_off(struct bpf_verifier_env *env,
 						continue;
 					if (type == STACK_MISC)
 						continue;
-					verbose(env, "invalid read from stack off %d+%d size %d\n",
+					verbose(env, "invalid read from stack off 3 %d+%d size %d\n",
 						off, i, size);
 					return -EACCES;
 				}
@@ -3622,7 +3623,7 @@ static int check_stack_read_fixed_off(struct bpf_verifier_env *env,
 			 * We must not allow unprivileged callers to do that
 			 * with spilled pointers.
 			 */
-			verbose(env, "leaking pointer from stack off %d\n",
+			verbose(env, "leaking pointer from stack off 1 %d\n",
 				off);
 			return -EACCES;
 		}
@@ -3634,7 +3635,7 @@ static int check_stack_read_fixed_off(struct bpf_verifier_env *env,
 				continue;
 			if (type == STACK_ZERO)
 				continue;
-			verbose(env, "invalid read from stack off %d+%d size %d\n",
+			verbose(env, "invalid read from stack off 2 %d+%d size %d\n",
 				off, i, size);
 			return -EACCES;
 		}
@@ -4954,17 +4955,19 @@ static int check_ptr_to_map_access(struct bpf_verifier_env *env,
  * The minimum valid offset is -MAX_BPF_STACK for writes, and
  * -state->allocated_stack for reads.
  */
-static int check_stack_slot_within_bounds(int off,
+static int check_stack_slot_within_bounds(bool debug, int off,
 					  struct bpf_func_state *state,
 					  enum bpf_access_type t)
 {
 	int min_valid_off;
-
+	if (debug) {
+		printk(KERN_INFO "[MATI] check_stack_slot_within_bounds: off: %d, state->allocated_stack: %d, access_type: %d\n", off, state->allocated_stack, t);
+	}
 	if (t == BPF_WRITE)
 		min_valid_off = -MAX_BPF_STACK;
 	else
 		min_valid_off = -state->allocated_stack;
-
+	if (debug) printk(KERN_INFO "[MATI] check_stack_slot_within_bounds: min_valid_off: %d, off: %d\n", min_valid_off, off);
 	if (off < min_valid_off || off > -1)
 		return -EACCES;
 	return 0;
@@ -4996,6 +4999,9 @@ static int check_stack_access_within_bounds(
 		err_extra = " write to";
 
 	if (tnum_is_const(reg->var_off)) {
+		if (regno == 10) printk(KERN_INFO "[MATI] check_stack_access_within_bounds: reg->var_off: %llu, %llu\n", reg->var_off.value, reg->var_off.mask);
+		if (regno == 10) printk(KERN_INFO "[MATI] check_stack_access_within_bounds: off: %d, access_size: %d\n", off, access_size);
+		if (regno == 10) printk(KERN_INFO "[MATI] check_stack_access_within_bounds: access_type: %d (READ=1, WRITE=2)\n", type);
 		min_off = reg->var_off.value + off;
 		if (access_size > 0)
 			max_off = min_off + access_size - 1;
@@ -5015,9 +5021,9 @@ static int check_stack_access_within_bounds(
 			max_off = min_off;
 	}
 
-	err = check_stack_slot_within_bounds(min_off, state, type);
+	err = check_stack_slot_within_bounds((regno == 10), min_off, state, type);
 	if (!err)
-		err = check_stack_slot_within_bounds(max_off, state, type);
+		err = check_stack_slot_within_bounds((regno == 10), max_off, state, type);
 
 	if (err) {
 		if (tnum_is_const(reg->var_off)) {
