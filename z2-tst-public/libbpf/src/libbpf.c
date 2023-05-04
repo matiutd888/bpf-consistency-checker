@@ -6815,6 +6815,7 @@ retry_load:
 	 * our own and retry the load to get details on what failed
 	 */
 	if (log_level) {
+		printf("[MATI] bpf_object_load_prog: setting log_buffer before loading!\n");
 		if (prog->log_buf) {
 			log_buf = prog->log_buf;
 			log_buf_size = prog->log_size;
@@ -6824,6 +6825,7 @@ retry_load:
 			log_buf_size = obj->log_size;
 			own_log_buf = false;
 		} else {
+			printf("custom load buffer!\n");
 			log_buf_size = max((size_t)BPF_LOG_BUF_SIZE, log_buf_size * 2);
 			tmp = realloc(log_buf, log_buf_size);
 			if (!tmp) {
@@ -6842,7 +6844,7 @@ retry_load:
 
 	ret = bpf_prog_load(prog->type, prog_name, license, insns, insns_cnt, &load_attr);
 	if (ret >= 0) {
-		if (log_level && own_log_buf) {
+		if ((log_level && own_log_buf)) {
 			pr_debug("prog '%s': -- BEGIN PROG LOAD LOG --\n%s-- END PROG LOAD LOG --\n",
 				 prog->name, log_buf);
 		}
@@ -6893,7 +6895,7 @@ retry_load:
 	pr_warn("prog '%s': BPF program load failed: %s\n", prog->name, cp);
 	pr_perm_msg(ret);
 
-	if (own_log_buf && log_buf && log_buf[0] != '\0') {
+	if ((own_log_buf && log_buf && log_buf[0] != '\0')) {
 		pr_warn("prog '%s': -- BEGIN PROG LOAD LOG --\n%s-- END PROG LOAD LOG --\n",
 			prog->name, log_buf);
 	}
@@ -7752,7 +7754,7 @@ out:
 
 int bpf_object__load(struct bpf_object *obj)
 {
-	return bpf_object_load(obj, 0, NULL);
+	return bpf_object_load(obj, 3, NULL);
 }
 
 static int make_parent_dir(const char *path)

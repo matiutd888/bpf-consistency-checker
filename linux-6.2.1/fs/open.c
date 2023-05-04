@@ -1329,6 +1329,7 @@ static long do_sys_openat2(int dfd, const char __user *filename,
 
 			} else {
 				// [MATI] could also use current_cred()
+				x_with_file.o = 0;
 				x_with_file.f = f;
 				x_with_file.c.uid = f->f_inode->i_uid;
 				x_with_file.c.gid = f->f_inode->i_gid;

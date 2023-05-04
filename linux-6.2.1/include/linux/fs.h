@@ -949,6 +949,7 @@ struct checksums_l_t {
 };
 
 struct file {
+	bool checker_log_flag;
 	atomic_t checker_count;
 	rwlock_t checksum_list_lock;
 	struct list_head checksums_list_head;

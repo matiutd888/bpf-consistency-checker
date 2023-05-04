@@ -145,11 +145,22 @@ int bpf_checker_calculate(struct checker_ctx *ctx)
 BPF_CALL_4(bpf_copy_to_buffer, void *, ctx, unsigned long, offset, void *, ptr,
 	   unsigned long, size)
 {
+	ssize_t ret;
+	loff_t s_offset;
 	struct bpf_checker_ctx_with_file *ctx_with_file =
 		container_of(ctx, struct bpf_checker_ctx_with_file, c);
-	printk("[MATI] bpf_copy_to_buffer: Successfully retrieved file with fd: %p\n",
+	printk(KERN_INFO "[MATI] bpf_copy_to_buffer: Successfully retrieved file with fd: %p\n",
 	       ctx_with_file->f);
-	return 0;
+	
+
+	s_offset = ctx_with_file->o + offset;
+	ctx_with_file->f->checker_log_flag = true;
+	ret = kernel_read(ctx_with_file->f, ptr, size, &s_offset);
+	ctx_with_file->f->checker_log_flag = false;
+	if (ret < 0) {
+		printk(KERN_INFO "[MATI] bpf_copy_to_buffer: Error during vfs_read!\n");
+	}
+	return ret;
 }
 
 const struct bpf_func_proto bpf_copy_to_buffer_proto = {

@@ -8,6 +8,14 @@ int bpf_test_load(char *bpf, struct bpf_test *test)
 		fprintf(stderr, "ERROR: opening BPF object file failed\n");
 		return 1;
 	}
+
+	// bpf_object__for_each_program(test->prog, test->obj) {
+	// 	printf("Setting log level");
+	// 	if (bpf_program__set_log_level(test->prog, 1) != 0) {
+	// 		fprintf(stderr, "[MATI] bpf_test_load: ERROR SETTING LOG LEVEL!\n");
+	// 	}
+	// }
+
 	
 	if (bpf_object__load(test->obj)) {
 		fprintf(stderr, "ERROR: loading BPF object file failed\n");

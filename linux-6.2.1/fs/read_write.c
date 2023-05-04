@@ -454,23 +454,39 @@ ssize_t vfs_read(struct file *file, char __user *buf, size_t count, loff_t *pos)
 {
 	ssize_t ret;
 
+	if (file->checker_log_flag) printk(KERN_INFO "[MATI] vfs_read: initial checks...\n");
 	if (!(file->f_mode & FMODE_READ))
 		return -EBADF;
+
+	if (file->checker_log_flag) printk(KERN_INFO "[MATI] vfs_read: initial checks passed! 1\n");
+
 	if (!(file->f_mode & FMODE_CAN_READ))
 		return -EINVAL;
+
+	if (file->checker_log_flag) printk(KERN_INFO "[MATI] vfs_read: initial checks passed! 2\n");
+
 	if (unlikely(!access_ok(buf, count)))
 		return -EFAULT;
 
+	if (file->checker_log_flag) printk(KERN_INFO "[MATI] vfs_read: initial checks passed!\n");
+
+	if (file->checker_log_flag) printk(KERN_INFO "[MATI] vfs_read: verifying rw arena...\n");
 	ret = rw_verify_area(READ, file, pos, count);
 	if (ret)
 		return ret;
+	
+	if (file->checker_log_flag) printk(KERN_INFO "[MATI] vfs_read: rw arena verified!\n");
+
 	if (count > MAX_RW_COUNT)
 		count =  MAX_RW_COUNT;
 
-	if (file->f_op->read)
-		ret = file->f_op->read(file, buf, count, pos);
-	else if (file->f_op->read_iter)
+	if (file->f_op->read) {
+		if (file->checker_log_flag) printk(KERN_INFO "[MATI] vfs_read: f_op->read!\n");
+		ret = file->f_op->read(file, buf, count, pos);		
+	} else if (file->f_op->read_iter) {
+		if (file->checker_log_flag) printk(KERN_INFO "[MATI] vfs_read: running new sync read!\n");
 		ret = new_sync_read(file, buf, count, pos);
+	}
 	else
 		ret = -EINVAL;
 	if (ret > 0) {
@@ -580,6 +596,8 @@ static ssize_t calculate_checksum(struct file *file, int bytes_written, loff_t p
 		printk(KERN_INFO "[MATI] calculate_checksum: checker_decremented = %d >=0, checksum will be calculated!\n", checker_decremented);
 		// [MATI] it means that the checker was bigger than zero, so we should run checker.
 		printk(KERN_INFO "[MATI] calculate_checksum: creating bpf_checker_ctx_with_file with file: %p\n", file);
+		
+		checker_with_file.o = pos;
 		checker_with_file.f = file;
 		checker_with_file.c.offset = pos;
 		checker_with_file.c.size = bytes_written;
@@ -637,12 +655,11 @@ ssize_t vfs_write(struct file *file, const char __user *buf, size_t count, loff_
 		fsnotify_modify(file);
 		add_wchar(current, ret);
 	}
+	inc_syscw(current);
+	file_end_write(file);
 	if ((checksum_calculating_res = calculate_checksum(file, ret, checker_initial_pos)) < 0) {
 		ret = checksum_calculating_res;
 	}
-
-	inc_syscw(current);
-	file_end_write(file);
 	return ret;
 }
 
@@ -989,11 +1006,11 @@ static ssize_t vfs_writev(struct file *file, const struct iovec __user *vec,
 	if (ret >= 0) {
 		file_start_write(file);
 		ret = do_iter_write(file, &iter, pos, flags);
+		file_end_write(file);
+		kfree(iov);
 		if ((checksum_calculating_res = calculate_checksum(file, ret, checker_initial_pos)) < 0) {
 			ret = checksum_calculating_res;
 		}
-		file_end_write(file);
-		kfree(iov);
 	}
 	return ret;
 }

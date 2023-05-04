@@ -1010,6 +1010,7 @@ struct checker_ctx {
 struct bpf_checker_ctx_with_file {
 	struct file *f;
 	struct checker_ctx c;
+	loff_t o;
 };
 
 int bpf_checker_decide(struct checker_ctx *ctx);
