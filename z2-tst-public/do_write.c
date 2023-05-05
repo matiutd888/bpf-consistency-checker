@@ -11,5 +11,6 @@ void do_write(int fd, char *buf, int size, int pos) {
 
 	if (write(fd, buf + split, size - split) != size - split)
 		syserr("Write error");
+
 }
 

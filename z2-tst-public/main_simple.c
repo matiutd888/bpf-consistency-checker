@@ -33,15 +33,6 @@ int main(int argc, char **argv)
 	close(fd);
 
 
-
-	// printf("Successfully started! Please run `sudo cat /sys/kernel/debug/tracing/trace_pipe` "
-	//        "to see output of the BPF programs.\n");
-	// for (;;) {
-	// 	/* trigger our BPF program */
-	// 	fprintf(stderr, ".");
-	// 	sleep(1);
-	// }
-
 cleanup:
     bpf_test_cleanup(&test);
 	return res;
