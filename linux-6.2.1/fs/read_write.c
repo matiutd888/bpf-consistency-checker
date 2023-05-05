@@ -591,7 +591,7 @@ static ssize_t calculate_checksum(struct file *file, int bytes_written, loff_t p
 	}
 
 	// [MATI] TODO czy rozmiar zero też przesyłać??? 
-	checker_decremented = atomic_dec_if_positive(&file->checker_count);
+	checker_decremented = atomic_dec_if_positive(&file->checker_coufirnt);
 	if (checker_decremented >= 0) { 
 		printk(KERN_INFO "[MATI] calculate_checksum: checker_decremented = %d >=0, checksum will be calculated!\n", checker_decremented);
 		// [MATI] it means that the checker was bigger than zero, so we should run checker.

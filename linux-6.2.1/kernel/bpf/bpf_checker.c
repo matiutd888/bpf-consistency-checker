@@ -167,13 +167,12 @@ const struct bpf_func_proto bpf_copy_to_buffer_proto = {
 	.func = bpf_copy_to_buffer,
 	.gpl_only = true,
 	.ret_type = RET_INTEGER,
-	.arg1_type = ARG_ANYTHING,
+	.arg1_type = ARG_PTR_TO_CTX,
 	.arg2_type = ARG_ANYTHING,
-	.arg3_type = ARG_ANYTHING,
-	.arg4_type = ARG_ANYTHING,
+	.arg3_type = ARG_PTR_TO_UNINIT_MEM,
+	.arg4_type = ARG_CONST_SIZE_OR_ZERO,
 };
 
-/* bpf+kprobe programs can access fields of 'struct pt_regs' */
 static bool bpf_checker_prog_is_valid_access(int off, int size,
 					     enum bpf_access_type type,
 					     const struct bpf_prog *prog,
@@ -188,7 +187,6 @@ static bool bpf_checker_prog_is_valid_access(int off, int size,
 	if (off % size != 0)
 		return false;
 
-	// [MATI] TODO should it be uncommented????
 	// from kprobe_prog_is_valid_access
 	// if (off + size > sizeof(struct checker_ctx))
 	// 	return false;

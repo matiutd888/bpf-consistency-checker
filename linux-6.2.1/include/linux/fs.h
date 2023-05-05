@@ -1029,7 +1029,6 @@ static inline void checksum_list_write_unlock(struct file *f) {
 	write_unlock_irqrestore(&f->checksum_list_lock, flags);
 }
 
-// [MATI] TODO co z lockami, czy moge ich używać
 static inline void free_checksum_list(struct file *f) {
 	struct checksums_l_t *curr;
 	struct checksums_l_t *next;

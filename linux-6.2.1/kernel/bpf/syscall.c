@@ -3355,7 +3355,6 @@ static int bpf_perf_link_attach(const union bpf_attr *attr, struct bpf_prog *pro
 #endif /* CONFIG_PERF_EVENTS */
 
 
-// TODO co robi w zasadzie ta funkcja
 // W zależności od typu wywołuje coś innego
 // Czy to tp_name to będzie
 static int bpf_raw_tp_link_attach(struct bpf_prog *prog,
