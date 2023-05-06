@@ -13,8 +13,12 @@ int main(int argc, char **argv)
 	int res = 0;
 	struct bpf_link *links[2];
 
+	char *failing_file = "bpf_check_ctx.o"; 
+	if (argc > 1) {
+		failing_file = argv[1];
+	}
 
-	obj = bpf_object__open("bpf_check_ctx.o");
+	obj = bpf_object__open(failing_file);
 	if (libbpf_get_error(obj)) {
 		fprintf(stderr, "ERROR: opening BPF object file failed\n");
 		return 1;
@@ -26,7 +30,6 @@ int main(int argc, char **argv)
         printf("FAIL\n");
         res = -1;
     }
-
 
 	bpf_object__close(obj);
 	return res;

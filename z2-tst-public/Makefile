@@ -1,10 +1,10 @@
 TESTS=write
-MISC=fail_ctx check_perm
+MISC=fail_ctx check_perm custom_simple_run
 HOST=$(addprefix simple_,$(TESTS)) \
      $(addprefix complex_,$(TESTS)) \
 	 $(MISC)
 
-BPF=bpf_simple.o bpf_complex.o bpf_check_ctx.o bpf_check_perm.o
+BPF=bpf_simple.o bpf_complex.o bpf_check_ctx.o bpf_check_perm.o bpf_custom_check_ctx.o
 TARGETS=$(HOST) $(BPF)
 
 LIBBPF=libbpf/src/libbpf.a

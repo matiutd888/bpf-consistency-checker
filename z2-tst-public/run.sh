@@ -17,6 +17,21 @@ run() {
 	[ "$ok" == "1" ] && echo OK
 }
 
+run_fail() {
+	echo "=== fail ctx ==="
+	failing_files=("bpf_check_ctx.o" "bpf_custom_check_ctx.o")
+	ok=1
+	for $f in $failing_files; do
+		rm -f tst
+		echo Testing file $f
+		if ! ./fail_ctx $f ; then
+			echo "Exec failed"
+			ok=0
+		fi
+	done
+	[ "$ok" == "1" ] && echo OK
+}
+
 do_check_perm() {
 	echo "==== CHECK PERM"
 	./check_perm /tmp/test && echo OK
@@ -26,7 +41,7 @@ run simple_write
 run complex_write
 
 echo "==== FAIL CTX"
-run fail_ctx
+run_fail
 
 rm -f /tmp/test
 touch /tmp/test
