@@ -1033,12 +1033,12 @@ static inline void free_checksum_list(struct file *f) {
 	struct checksums_l_t *curr;
 	struct checksums_l_t *next;
 	
-	checksum_list_write_lock(f);
+	// checksum_list_write_lock(f);
 	list_for_each_entry_safe(curr, next, &f->checksums_list_head, checksums) {
 		list_del(&curr->checksums);
 		kfree(curr);
 	}
-	checksum_list_write_unlock(f);
+	// checksum_list_write_unlock(f);
 }
 
 

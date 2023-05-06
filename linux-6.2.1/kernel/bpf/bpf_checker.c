@@ -126,7 +126,9 @@ SYSCALL_DEFINE1(reset_checksums, int, fd)
 	if (!f) {
 		return -EINVAL;
 	}
+	checksum_list_write_lock(f);
 	free_checksum_list(f);
+	checksum_list_write_unlock(f);
 	return 0;
 }
 
