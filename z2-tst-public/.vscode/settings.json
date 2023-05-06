@@ -1,0 +1,21 @@
+{
+    "C_Cpp.default.configurationProvider": "ms-vscode.makefile-tools",
+    "files.associations": {
+        "bpf_helpers.h": "c",
+        "bpf_tracing.h": "c",
+        "bpf_core_read.h": "c",
+        "*.tcc": "c",
+        "fstream": "c",
+        "array": "c",
+        "string_view": "c",
+        "initializer_list": "c",
+        "valarray": "c",
+        "atomic": "c",
+        "condition_variable": "c"
+    },
+    "workbench.colorCustomizations": {
+        "activityBar.background": "#581131",
+        "titleBar.activeBackground": "#7B1844",
+        "titleBar.activeForeground": "#FEFBFD"
+    }
+}
