@@ -9586,9 +9586,12 @@ int bpf_link__destroy(struct bpf_link *link)
 {
 	int err = 0;
 
-	if (IS_ERR_OR_NULL(link))
+	if (IS_ERR_OR_NULL(link))  {
+		printf("[MATI] bpf_link__destroy: link already err or null!\n");
 		return 0;
-
+	}
+	
+		
 	if (!link->disconnected && link->detach)
 		err = link->detach(link);
 	if (link->pin_path)

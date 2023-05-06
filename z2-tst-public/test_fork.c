@@ -41,7 +41,7 @@ int main() {
         assert(syscall(453, fd) == 1);
         printf("child executed\n");
         close(fd);
-        bpf_test_cleanup(&test);
+        // bpf_test_cleanup(&test);
         exit(0);
     } else {
         sleep(2);

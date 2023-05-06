@@ -37,30 +37,30 @@ do_check_perm() {
 	./check_perm /tmp/test && echo OK
 }
 
-# run simple_write
-# run complex_write
-# run decide_no_calculate
-# run test_reset
-run test_fork
 run simple_write
-# run test_syscalls
+run complex_write
+run decide_no_calculate
+run test_reset
+# run test_fork
+# run simple_write
+run test_syscalls
 
-# echo "==== FAIL CTX"
-# run_fail
+echo "==== FAIL CTX"
+run_fail
 
-# rm -f /tmp/test
-# touch /tmp/test
-# chown 0:0 /tmp/test
-# chmod 660 /tmp/test
+rm -f /tmp/test
+touch /tmp/test
+chown 0:0 /tmp/test
+chmod 660 /tmp/test
 
-# do_check_perm "Same owner, 0660 mode"
+do_check_perm "Same owner, 0660 mode"
 
-# chown 1000:0 /tmp/test
-# do_check_perm "Other user"
+chown 1000:0 /tmp/test
+do_check_perm "Other user"
 
-# chown 0:1000 /tmp/test
-# do_check_perm "Other group"
+chown 0:1000 /tmp/test
+do_check_perm "Other group"
 
-# chown 0:0 /tmp/test
-# chmod 664 /tmp/test
-# do_check_perm "Same owner, 0664 mode"
+chown 0:0 /tmp/test
+chmod 664 /tmp/test
+do_check_perm "Same owner, 0664 mode"
