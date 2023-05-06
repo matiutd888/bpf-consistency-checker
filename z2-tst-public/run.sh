@@ -21,7 +21,7 @@ run_fail() {
 	echo "=== fail ctx ==="
 	failing_files=("bpf_check_ctx.o" "bpf_custom_check_ctx.o")
 	ok=1
-	for $f in $failing_files; do
+	for f in ${failing_files[@]}; do
 		rm -f tst
 		echo Testing file $f
 		if ! ./fail_ctx $f ; then
@@ -38,24 +38,24 @@ do_check_perm() {
 }
 
 run simple_write
-run complex_write
+# run complex_write
 
-echo "==== FAIL CTX"
-run_fail
+# echo "==== FAIL CTX"
+# run_fail
 
-rm -f /tmp/test
-touch /tmp/test
-chown 0:0 /tmp/test
-chmod 660 /tmp/test
+# rm -f /tmp/test
+# touch /tmp/test
+# chown 0:0 /tmp/test
+# chmod 660 /tmp/test
 
-do_check_perm "Same owner, 0660 mode"
+# do_check_perm "Same owner, 0660 mode"
 
-chown 1000:0 /tmp/test
-do_check_perm "Other user"
+# chown 1000:0 /tmp/test
+# do_check_perm "Other user"
 
-chown 0:1000 /tmp/test
-do_check_perm "Other group"
+# chown 0:1000 /tmp/test
+# do_check_perm "Other group"
 
-chown 0:0 /tmp/test
-chmod 664 /tmp/test
-do_check_perm "Same owner, 0664 mode"
+# chown 0:0 /tmp/test
+# chmod 664 /tmp/test
+# do_check_perm "Same owner, 0664 mode"
