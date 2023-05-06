@@ -1,5 +1,5 @@
 TESTS=write
-MISC=fail_ctx check_perm custom_simple_run decide_no_calculate
+MISC=fail_ctx check_perm custom_simple_run decide_no_calculate test_fork test_reset
 HOST=$(addprefix simple_,$(TESTS)) \
      $(addprefix complex_,$(TESTS)) \
 	 $(MISC)

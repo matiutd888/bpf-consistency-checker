@@ -40,7 +40,7 @@ do_check_perm() {
 run simple_write
 run complex_write
 run decide_no_calculate
-
+run test_reset
 
 echo "==== FAIL CTX"
 run_fail
