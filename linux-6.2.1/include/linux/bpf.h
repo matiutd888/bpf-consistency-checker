@@ -1011,6 +1011,7 @@ struct bpf_checker_ctx_with_file {
 	struct file *f;
 	struct checker_ctx c;
 	loff_t o;
+	bool was_calculated_by_default_function;
 };
 
 int bpf_checker_decide(struct checker_ctx *ctx);

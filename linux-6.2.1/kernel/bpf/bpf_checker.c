@@ -139,8 +139,11 @@ int bpf_checker_decide(struct checker_ctx *ctx)
 }
 int bpf_checker_calculate(struct checker_ctx *ctx)
 {
-	printk(KERN_INFO "[MATI] bpf_checker_calculate code is running!\n");
-	return 1;
+	struct bpf_checker_ctx_with_file *ctx_with_file;	
+	ctx_with_file = container_of(ctx, struct bpf_checker_ctx_with_file, c);	
+	printk(KERN_INFO "[MATI] bpf_checker_calculate default code is running! setting calculated_by_default_function to true\n");
+	ctx_with_file->was_calculated_by_default_function = true;
+	return 0;
 };
 
 

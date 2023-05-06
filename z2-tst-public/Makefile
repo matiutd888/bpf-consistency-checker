@@ -1,10 +1,10 @@
 TESTS=write
-MISC=fail_ctx check_perm custom_simple_run
+MISC=fail_ctx check_perm custom_simple_run decide_no_calculate
 HOST=$(addprefix simple_,$(TESTS)) \
      $(addprefix complex_,$(TESTS)) \
 	 $(MISC)
 
-BPF=bpf_simple.o bpf_complex.o bpf_check_ctx.o bpf_check_perm.o bpf_custom_check_ctx.o
+BPF=bpf_simple.o bpf_complex.o bpf_check_ctx.o bpf_check_perm.o bpf_custom_check_ctx.o bpf_decide_no_calculate.o
 TARGETS=$(HOST) $(BPF)
 
 LIBBPF=libbpf/src/libbpf.a
@@ -14,7 +14,6 @@ CFLAGS=-I libbpf/src -I libbpf/include -I libbpf/include/uapi -O2
 LDFLAGS=-lelf -lz
 
 all: $(TARGETS)
-
 
 simple_%: do_%.c main_simple.c common.c $(LIBBPF)
 	$(CC) -o $@ $< main_simple.c common.c $(LIBBPF) $(LDFLAGS) $(CFLAGS)
