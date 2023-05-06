@@ -3,7 +3,10 @@
 #include <unistd.h>
 #include <sys/wait.h>
 #include "common.h"
+#include <assert.h>
 
+char parent[] = "6789";
+char child[] = "012345";
 int main() {
     FILE *fp;
     pid_t pid;
@@ -11,7 +14,7 @@ int main() {
 	int fd;
     int res = 0;
 	struct bpf_test test;
-    if (bpf_test_load("bpf_simple.o", &test) != 0)
+    if (bpf_test_load("bpf_complex.o", &test) != 0)
         return -1;
 
     if ((fd = open("tst", O_RDWR | O_CREAT, 0644)) < 0) {
@@ -19,6 +22,7 @@ int main() {
         res = -1;
         goto cleanup;
     }
+    printf("Loaded correctly!\n");
     pid = fork();
 
     if (pid == -1) {
@@ -26,14 +30,39 @@ int main() {
         exit(1);
     }
 
+    int checksum;
+	size_t size;
+	off_t offset;
+	
+
     if (pid == 0) {
-        fprintf(fp, "child\n");
+        assert(syscall(453, fd) == 0);
+        write(fd, child, sizeof(child));
+        assert(syscall(453, fd) == 1);
+        printf("child executed\n");
+        close(fd);
+        bpf_test_cleanup(&test);
         exit(0);
     } else {
-        sleep(5);
-        // fprintf(fp, "parent\n");
+        sleep(2);
+        assert(syscall(453, fd) == 1);
+	    assert(syscall(451, fd, &checksum, &size, &offset) == 0);
+        assert(checksum == (0 + 1 + 2 + 3 * (int)'0') && size == sizeof(child) && offset == 0);
+        write(fd, parent, sizeof(parent));
+        
+        assert(syscall(453, fd) == 2);
+        assert(syscall(451, fd, &checksum, &size, &offset) == 0);
+        assert(checksum == (6 + 7 + 8 + 3 * (int)'0') && size == sizeof(parent) && offset == sizeof(child));
+        write(fd, parent, sizeof(parent));        
+        assert(syscall(453, fd) == 3);
+        assert(syscall(451, fd, &checksum, &size, &offset) == 0);
+        assert(checksum == (6 + 7 + 8 + 3 * (int)'0') && size == sizeof(parent) && offset == sizeof(child) + sizeof(parent));
+        syscall(452, sizeof(parent), sizeof(child), &checksum);
+        assert(checksum == (6 + 7 + 8 + 3 * (int)'0'));
+        // fprintf(fp, "parent\n");  
+        close(fd);
         wait(NULL);
-        fclose(fp);
+        printf("parent executed\n");
     }
 
 

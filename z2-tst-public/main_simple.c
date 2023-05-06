@@ -6,14 +6,16 @@ int main(int argc, char **argv)
 	int fd;
 	int res = 0;
 	struct bpf_test test;
-    if (bpf_test_load("bpf_simple.o", &test) != 0)
-        return -1;
-
+   
 	if ((fd = open("tst", O_RDWR | O_CREAT, 0644)) < 0) {
         fprintf(stderr, "Unable to open\n");
         res = -1;
         goto cleanup;
     }
+
+	if (bpf_test_load("bpf_simple.o", &test) != 0)
+		return -1;
+
 
 	int checksum;
 	size_t size;
