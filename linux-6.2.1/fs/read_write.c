@@ -454,37 +454,29 @@ ssize_t vfs_read(struct file *file, char __user *buf, size_t count, loff_t *pos)
 {
 	ssize_t ret;
 
-	if (file->checker_log_flag) printk(KERN_INFO "[MATI] vfs_read: initial checks...\n");
 	if (!(file->f_mode & FMODE_READ))
 		return -EBADF;
 
-	if (file->checker_log_flag) printk(KERN_INFO "[MATI] vfs_read: initial checks passed! 1\n");
 
 	if (!(file->f_mode & FMODE_CAN_READ))
 		return -EINVAL;
 
-	if (file->checker_log_flag) printk(KERN_INFO "[MATI] vfs_read: initial checks passed! 2\n");
 
 	if (unlikely(!access_ok(buf, count)))
 		return -EFAULT;
 
-	if (file->checker_log_flag) printk(KERN_INFO "[MATI] vfs_read: initial checks passed!\n");
 
-	if (file->checker_log_flag) printk(KERN_INFO "[MATI] vfs_read: verifying rw arena...\n");
 	ret = rw_verify_area(READ, file, pos, count);
 	if (ret)
 		return ret;
 	
-	if (file->checker_log_flag) printk(KERN_INFO "[MATI] vfs_read: rw arena verified!\n");
 
 	if (count > MAX_RW_COUNT)
 		count =  MAX_RW_COUNT;
 
 	if (file->f_op->read) {
-		if (file->checker_log_flag) printk(KERN_INFO "[MATI] vfs_read: f_op->read!\n");
 		ret = file->f_op->read(file, buf, count, pos);		
 	} else if (file->f_op->read_iter) {
-		if (file->checker_log_flag) printk(KERN_INFO "[MATI] vfs_read: running new sync read!\n");
 		ret = new_sync_read(file, buf, count, pos);
 	}
 	else
@@ -592,18 +584,14 @@ static ssize_t calculate_checksum(struct file *file, int bytes_written, loff_t p
 
 	checker_decremented = atomic_dec_if_positive(&file->checker_count);
 	if (checker_decremented >= 0) { 
-		printk(KERN_INFO "[MATI] calculate_checksum: checker_decremented = %d >=0, checksum will be calculated!\n", checker_decremented);
-		// [MATI] it means that the checker was bigger than zero, so we should run checker.
-		printk(KERN_INFO "[MATI] calculate_checksum: creating bpf_checker_ctx_with_file with file: %p\n", file);
+		// It means that the checker was bigger than zero, so we should run checker.
 		
 		checker_with_file.was_calculated_by_default_function = false;
 		checker_with_file.o = pos;
 		checker_with_file.f = file;
 		checker_with_file.c.offset = pos;
 		checker_with_file.c.size = bytes_written;
-		printk(KERN_INFO "[MATI] calculate_checksum: bpf_checker_calculate params: offset = %lld, size = %zu\n", checker_with_file.c.offset, checker_with_file.c.size);
 		checker_value = bpf_checker_calculate(&checker_with_file.c);
-		printk(KERN_INFO "[MATI] calculate_checksum: bpf_checker_calculate returned = %d\n", checker_value);
 		if (checker_with_file.was_calculated_by_default_function) {
 			// checker/calculate wasn't attached
 			return -EINVAL;

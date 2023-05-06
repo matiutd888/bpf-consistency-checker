@@ -1474,7 +1474,6 @@ union bpf_attr {
 		__aligned_u64	prog_attach_flags;
 	} query;
 
-	// [MATI] co to będzie to name
 	struct { /* anonymous struct used by BPF_RAW_TRACEPOINT_OPEN command */
 		__u64 name;
 		__u32 prog_fd; // FD służy do znalezienia programu z atrybutów

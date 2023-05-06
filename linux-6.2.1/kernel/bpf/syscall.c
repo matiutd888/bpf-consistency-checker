@@ -2480,16 +2480,9 @@ static int bpf_prog_load(union bpf_attr *attr, bpfptr_t uattr)
 	char license[128];
 	bool is_gpl;
 
-	
-	printk(KERN_INFO "[MATI] bpf_prog_load: prog_type: %d, prog_btf_fd: %d, attach_btf_id: %d\n", 
-	attr->prog_type, 
-	attr->prog_btf_fd, 
-	attr->attach_btf_id);
-
 	if (CHECK_ATTR(BPF_PROG_LOAD))
 		return -EINVAL;
 
-	printk(KERN_INFO "[MATI] bpf_prog_load: attribuite checked!\n");
 
 	if (attr->prog_flags & ~(BPF_F_STRICT_ALIGNMENT |
 				 BPF_F_ANY_ALIGNMENT |
@@ -2547,7 +2540,6 @@ static int bpf_prog_load(union bpf_attr *attr, bpfptr_t uattr)
 		}
 	} else if (attr->attach_btf_id) {
 
-		printk(KERN_INFO "[MATI] bpf_prog_load: checking bpf_get_btf_vmlinux!\n");
 		/* fall back to vmlinux BTF, if BTF type ID is specified */
 		attach_btf = bpf_get_btf_vmlinux();
 		if (IS_ERR(attach_btf))
@@ -2557,9 +2549,7 @@ static int bpf_prog_load(union bpf_attr *attr, bpfptr_t uattr)
 		btf_get(attach_btf);
 	}
 
-	printk(KERN_INFO "[MATI] bpf_prog_load: attach_btf read from vmlinux correctly!\n");
 
-	printk(KERN_INFO "[MATI] bpf_prog_load: checking attach type\n");
 
 	bpf_prog_load_fixup_attach_type(attr);
 	if (bpf_prog_load_check_attach(type, attr->expected_attach_type,
@@ -2572,7 +2562,6 @@ static int bpf_prog_load(union bpf_attr *attr, bpfptr_t uattr)
 		return -EINVAL;
 	}
 
-	printk(KERN_INFO "[MATI] bpf_prog_load: attach type checked correctly\n");
 
 
 	/* plain bpf_prog allocation */
@@ -2585,7 +2574,6 @@ static int bpf_prog_load(union bpf_attr *attr, bpfptr_t uattr)
 		return -ENOMEM;
 	}
 
-	printk(KERN_INFO "[MATI] bpf_prog_load: program allocated\n");
 
 
 	prog->expected_attach_type = attr->expected_attach_type;
@@ -2621,7 +2609,6 @@ static int bpf_prog_load(union bpf_attr *attr, bpfptr_t uattr)
 			goto free_prog_sec;
 	}
 
-	printk(KERN_INFO "[MATI] bpf_prog_load: finding program type...\n");
 
 
 	/* find program type: socket_filter vs tracing_filter */
@@ -2629,7 +2616,6 @@ static int bpf_prog_load(union bpf_attr *attr, bpfptr_t uattr)
 	if (err < 0)
 		goto free_prog_sec;
 
-	printk(KERN_INFO "[MATI] bpf_prog_load: program type found\n");
 
 
 	prog->aux->load_time = ktime_get_boottime_ns();
@@ -2639,19 +2625,16 @@ static int bpf_prog_load(union bpf_attr *attr, bpfptr_t uattr)
 		goto free_prog_sec;
 
 
-	printk(KERN_INFO "[MATI] bpf_prog_load: veryfying...\n");
 	/* run eBPF verifier */
 	err = bpf_check(&prog, attr, uattr);
 	if (err < 0)
 		goto free_used_maps;
 
-	printk(KERN_INFO "[MATI] bpf_prog_load: veryfied!\n");
 
 	prog = bpf_prog_select_runtime(prog, &err);
 	if (err < 0)
 		goto free_used_maps;
 
-	printk(KERN_INFO "[MATI] bpf_prog_load: runtime selected!	\n");
 	err = bpf_prog_alloc_id(prog);
 	if (err)
 		goto free_used_maps;
@@ -2994,9 +2977,9 @@ static const struct bpf_link_ops bpf_tracing_link_lops = {
 
 
 static int bpf_tracing_prog_attach(struct bpf_prog *prog,
-				   int tgt_prog_fd, /* Co to za zmienna? */ // 0
-				   u32 btf_id, // 0
-				   u64 bpf_cookie) // 0
+				   int tgt_prog_fd,
+				   u32 btf_id,
+				   u64 bpf_cookie)
 {
 	struct bpf_link_primer link_primer;
 	struct bpf_prog *tgt_prog = NULL;
@@ -3059,7 +3042,6 @@ static int bpf_tracing_prog_attach(struct bpf_prog *prog,
 		key = bpf_trampoline_compute_key(tgt_prog, NULL, btf_id);
 	}
 
-	printk(KERN_INFO "[MATI] bpf_tracing_prog_attach: initial checks executed correctly!\n");
 
 	link = kzalloc(sizeof(*link), GFP_USER);
 	if (!link) {
@@ -3094,13 +3076,9 @@ static int bpf_tracing_prog_attach(struct bpf_prog *prog,
 	 *   was detached and is going for re-attachment.
 	 */
 
-	// [MATI] czym w zasadzie jest target
 	// if tgt_prog == NULL when this function was called using the old
 	//	 *   raw_tracepoint_open API, and we need a target from prog->aux
-	// [MATI] czym jest dst trampoline
-	printk(KERN_INFO "[MATI] bpf_tracing_prog_attach: computing btf_id and key..\n");
 	if (!prog->aux->dst_trampoline && !tgt_prog) {
-		printk(KERN_INFO "[MATI] bpf_tracing_prog_attach: dst trampoline not set, computing dst trampoline\n");
 		/*
 		 * Allow re-attach for TRACING and LSM programs. If it's
 		 * currently linked, bpf_trampoline_link_prog will fail.
@@ -3114,10 +3092,8 @@ static int bpf_tracing_prog_attach(struct bpf_prog *prog,
 			goto out_unlock;
 		}
 		btf_id = prog->aux->attach_btf_id;
-		printk(KERN_INFO "[MATI] bpf_tracing_prog_attach: btf id: %d\n", btf_id);
 		key = bpf_trampoline_compute_key(NULL, prog->aux->attach_btf, btf_id);
 	}
-	printk(KERN_INFO "[MATI] bpf_tracing_prog_attach: btf key computed\n");
 
 	if (!prog->aux->dst_trampoline ||
 	    (key && key != prog->aux->dst_trampoline->key)) {
@@ -3129,8 +3105,6 @@ static int bpf_tracing_prog_attach(struct bpf_prog *prog,
 		struct bpf_attach_target_info tgt_info = {};
 
 		
-		printk(KERN_INFO "[MATI] bpf_tracing_prog_attach: dst trampoline not set or key was set to different value than in dst trampoline\n");
-		printk(KERN_INFO "[MATI] bpf_tracing_prog_attach: will use tgt_prog and btf_id to attach target and get target info\n");
 		
 		err = bpf_check_attach_target(NULL, prog, tgt_prog, btf_id,
 					      &tgt_info);
@@ -3138,17 +3112,13 @@ static int bpf_tracing_prog_attach(struct bpf_prog *prog,
 			goto out_unlock;
 
 	
-		printk(KERN_INFO "[MATI] bpf_tracing_prog_attach: getting trampoline by key...\n");
 		
 		tr = bpf_trampoline_get(key, &tgt_info);
 		if (!tr) {
 			err = -ENOMEM;
 			goto out_unlock;
 		}
-        printk(KERN_INFO "[MATI] bpf_tracing_prog_attach: bpf_check_attach_target ended, tgt_info loaded with tname=%s\n", tgt_info.tgt_name);
-		printk(KERN_INFO "[MATI] bpf_tracing_prog_attach: getting trampoline finished correctly!\n");
 	} else {
-		printk(KERN_INFO "[MATI] bpf_tracing_prog_attach: other way; will use dst_Trampoline from prog->aux..\n");
 		/* The caller didn't specify a target, or the target was the
 		 * same as the destination supplied during program load. This
 		 * means we can reuse the trampoline and reference from program
@@ -3355,8 +3325,6 @@ static int bpf_perf_link_attach(const union bpf_attr *attr, struct bpf_prog *pro
 #endif /* CONFIG_PERF_EVENTS */
 
 
-// W zależności od typu wywołuje coś innego
-// Czy to tp_name to będzie
 static int bpf_raw_tp_link_attach(struct bpf_prog *prog,
 				  const char __user *user_tp_name)
 {
@@ -3367,18 +3335,11 @@ static int bpf_raw_tp_link_attach(struct bpf_prog *prog,
 	char buf[128];
 	int err;
 
-	if (prog->aux->attach_func_name) {
-		printk("[MATI] attach func name %s\n", prog->aux->attach_func_name);
-	} else {
-		printk("[MATI] attach func name == NULL\n");
-	}
 	switch (prog->type) {
 	case BPF_PROG_TYPE_TRACING:
 	case BPF_PROG_TYPE_EXT:
 	case BPF_PROG_TYPE_LSM:
 	case BPF_PROG_TYPE_CHECKER:
-		/* [MATI] Najprawdopodobniej trafimy tu. Należy w takim wypadku */
-		/* Chcemy śledzić tę ścieżkę bo my też dosdtaniemy NULL */
 		if (user_tp_name)
 			/* The attach point for this category of programs
 			 * should be specified via btf_id during program load.
@@ -3443,17 +3404,14 @@ static int bpf_raw_tracepoint_open(const union bpf_attr *attr)
 	int fd;
 	char __user *u;
 
-	printk(KERN_INFO "[MATI] Calling bpf raw tracepoint open");
 	if (CHECK_ATTR(BPF_RAW_TRACEPOINT_OPEN))
 		return -EINVAL;
 
-	// Pobieramy struktury z bpf atrybutów
 	prog = bpf_prog_get(attr->raw_tracepoint.prog_fd);
 	if (IS_ERR(prog))
 		return PTR_ERR(prog);
 
     u = u64_to_user_ptr(attr->raw_tracepoint.name);
-	printk(KERN_INFO "[MATI] raw_tracepoint data: fd=%d, name=%llu, name as user ptr %s", attr->raw_tracepoint.prog_fd, attr->raw_tracepoint.name, u);
 	fd = bpf_raw_tp_link_attach(prog, u);
 	if (fd < 0)
 		bpf_prog_put(prog);
@@ -3483,7 +3441,6 @@ static int bpf_prog_attach_check_attach_type(const struct bpf_prog *prog,
 	}
 }
 
-// [MATI] gdzoe ta fimlcka jest używana.
 static enum bpf_prog_type
 attach_type_to_prog_type(enum bpf_attach_type attach_type)
 {

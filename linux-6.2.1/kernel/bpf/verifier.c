@@ -3564,9 +3564,7 @@ static int check_stack_read_fixed_off(struct bpf_verifier_env *env,
 
 	stype = reg_state->stack[spi].slot_type;
 	reg = &reg_state->stack[spi].spilled_ptr;
-	
 	if (is_spilled_reg(&reg_state->stack[spi])) {
-		// printk("[MATI] check_stack_read_fixed_off: is_spilled_reg()")
 		u8 spill_size = 1;
 
 		for (i = BPF_REG_SIZE - 1; i > 0 && stype[i - 1] == STACK_SPILL; i--)
@@ -3598,7 +3596,7 @@ static int check_stack_read_fixed_off(struct bpf_verifier_env *env,
 						continue;
 					if (type == STACK_MISC)
 						continue;
-					verbose(env, "invalid read from stack off 3 %d+%d size %d\n",
+					verbose(env, "invalid read from stack off %d+%d size %d\n",
 						off, i, size);
 					return -EACCES;
 				}
@@ -3623,7 +3621,7 @@ static int check_stack_read_fixed_off(struct bpf_verifier_env *env,
 			 * We must not allow unprivileged callers to do that
 			 * with spilled pointers.
 			 */
-			verbose(env, "leaking pointer from stack off 1 %d\n",
+			verbose(env, "leaking pointer from stack off %d\n",
 				off);
 			return -EACCES;
 		}
@@ -3635,7 +3633,7 @@ static int check_stack_read_fixed_off(struct bpf_verifier_env *env,
 				continue;
 			if (type == STACK_ZERO)
 				continue;
-			verbose(env, "invalid read from stack off 2 %d+%d size %d\n",
+			verbose(env, "invalid read from stack off %d+%d size %d\n",
 				off, i, size);
 			return -EACCES;
 		}
@@ -4955,19 +4953,15 @@ static int check_ptr_to_map_access(struct bpf_verifier_env *env,
  * The minimum valid offset is -MAX_BPF_STACK for writes, and
  * -state->allocated_stack for reads.
  */
-static int check_stack_slot_within_bounds(bool debug, int off,
+static int check_stack_slot_within_bounds(int off,
 					  struct bpf_func_state *state,
 					  enum bpf_access_type t)
 {
 	int min_valid_off;
-	if (debug) {
-		printk(KERN_INFO "[MATI] check_stack_slot_within_bounds: off: %d, state->allocated_stack: %d, access_type: %d\n", off, state->allocated_stack, t);
-	}
 	if (t == BPF_WRITE)
 		min_valid_off = -MAX_BPF_STACK;
 	else
 		min_valid_off = -state->allocated_stack;
-	if (debug) printk(KERN_INFO "[MATI] check_stack_slot_within_bounds: min_valid_off: %d, off: %d\n", min_valid_off, off);
 	if (off < min_valid_off || off > -1)
 		return -EACCES;
 	return 0;
@@ -4999,9 +4993,6 @@ static int check_stack_access_within_bounds(
 		err_extra = " write to";
 
 	if (tnum_is_const(reg->var_off)) {
-		if (regno == 10) printk(KERN_INFO "[MATI] check_stack_access_within_bounds: reg->var_off: %llu, %llu\n", reg->var_off.value, reg->var_off.mask);
-		if (regno == 10) printk(KERN_INFO "[MATI] check_stack_access_within_bounds: off: %d, access_size: %d\n", off, access_size);
-		if (regno == 10) printk(KERN_INFO "[MATI] check_stack_access_within_bounds: access_type: %d (READ=1, WRITE=2)\n", type);
 		min_off = reg->var_off.value + off;
 		if (access_size > 0)
 			max_off = min_off + access_size - 1;
@@ -5021,9 +5012,9 @@ static int check_stack_access_within_bounds(
 			max_off = min_off;
 	}
 
-	err = check_stack_slot_within_bounds((regno == 10), min_off, state, type);
+	err = check_stack_slot_within_bounds(min_off, state, type);
 	if (!err)
-		err = check_stack_slot_within_bounds((regno == 10), max_off, state, type);
+		err = check_stack_slot_within_bounds(max_off, state, type);
 
 	if (err) {
 		if (tnum_is_const(reg->var_off)) {
@@ -7726,7 +7717,6 @@ static void update_loop_inline_state(struct bpf_verifier_env *env, u32 subprogno
 				 state->callback_subprogno == subprogno);
 }
 
-// [MATI] trzeba zbadać co się wykonuje przy unknown_func
 static int check_helper_call(struct bpf_verifier_env *env, struct bpf_insn *insn,
 			     int *insn_idx_p)
 {
@@ -7749,10 +7739,7 @@ static int check_helper_call(struct bpf_verifier_env *env, struct bpf_insn *insn
 	}
 
 	if (env->ops->get_func_proto) {
-		printk(KERN_INFO "[MATI] check_helper_call: env->ops->get_func_proto NOT null!\n");
 		fn = env->ops->get_func_proto(func_id, env->prog);
-	} else {
-		printk(KERN_INFO "[MATI] check_helper_call: env->ops->get_func_proto IS null!\n");
 	}
 	if (!fn) {
 		verbose(env, "unknown func %s#%d\n", func_id_name(func_id),
@@ -16503,7 +16490,6 @@ static int check_non_sleepable_error_inject(u32 btf_id)
 	return btf_id_set_contains(&btf_non_sleepable_error_inject, btf_id);
 }
 
-// [MATI] obczaic tę funkcję
 int bpf_check_attach_target(struct bpf_verifier_log *log,
 			    const struct bpf_prog *prog,
 			    const struct bpf_prog *tgt_prog, // NULL
@@ -16529,19 +16515,16 @@ int bpf_check_attach_target(struct bpf_verifier_log *log,
 			"FENTRY/FEXIT program can only be attached to another program annotated with BTF\n");
 		return -EINVAL;
 	}
-	printk("[MATI] bpf_check_attach_target: btf checks ok! getting btf type by id!\n");
 	t = btf_type_by_id(btf, btf_id);
 	if (!t) {
 		bpf_log(log, "attach_btf_id %u is invalid\n", btf_id);
 		return -EINVAL;
 	}
-	printk("[MATI] bpf_check_attach_target: getting btf name by offset!\n");
 	tname = btf_name_by_offset(btf, t->name_off);
 	if (!tname) {
 		bpf_log(log, "attach_btf_id %u doesn't have a name\n", btf_id);
 		return -EINVAL;
 	}
-	printk("[MATI] bpf_check_attach_target: name: %s\n", tname);
 	if (tgt_prog) {
 		struct bpf_prog_aux *aux = tgt_prog->aux;
 
@@ -16607,7 +16590,6 @@ int bpf_check_attach_target(struct bpf_verifier_log *log,
 			return -EINVAL;
 		}
 	}
-	printk("[MATI] bpf_check_attach_target: checking prog attach type\n");
 	switch (prog->expected_attach_type) {
 	case BPF_TRACE_RAW_TP:
 		if (tgt_prog) {
@@ -16727,7 +16709,6 @@ int bpf_check_attach_target(struct bpf_verifier_log *log,
 					ret = 0;
 				break;
 			case BPF_PROG_TYPE_CHECKER:
-				printk("[MATI] bpf_check_attach_target: checker type sleepable!\n");
 				break;
 			default:
 				break;

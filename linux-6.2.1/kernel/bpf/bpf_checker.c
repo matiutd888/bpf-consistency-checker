@@ -26,38 +26,28 @@ SYSCALL_DEFINE4(last_checksum, int, fd, int *, checksum, size_t *, size,
 	if (!f) {
 		return -EINVAL;
 	}
-	printk(KERN_INFO "[MATI] last_checksum: hello!\n");
 	checksum_list_read_lock(f);
-	printk(KERN_INFO "[MATI] last_checksum: locked!\n");
 	l = &f->checksums_list_head;
 	if (list_empty(l)) {
 		checksum_list_read_unlock(f);
 		return -EINVAL;
 	}
-	printk(KERN_INFO "[MATI] last_checksum: list not empty!\n");
 	last_entry_checksum =
 		list_first_entry(l, struct checksums_l_t, checksums);
 	if (!last_entry_checksum) {
 		printk(KERN_INFO
 		       "[MATI] last_checksum: unexpected NULL when getting list_last_entry!\n");
 	}
-	printk(KERN_INFO "[MATI] last_checksum: found! %d, %zu, %lld\n",
-	       last_entry_checksum->c.value, last_entry_checksum->c.size,
-	       last_entry_checksum->c.offset);
 	cs = last_entry_checksum->c.value;
 	ss = last_entry_checksum->c.size;
-	;
 	os = last_entry_checksum->c.offset;
 	checksum_list_read_unlock(f);
-	printk(KERN_INFO "[MATI] last_checksum: unlocked success!\n");
 	if (put_user(cs, checksum)) {
 		return -EFAULT;
 	}
-	printk(KERN_INFO "[MATI] last_checksum: assignment correct! 1\n");
 	if (put_user(ss, size)) {
 		return -EFAULT;
 	}
-	printk(KERN_INFO "[MATI] last_checksum: assignment correct! 2\n");
 	if (put_user(os, offset)) {
 		return -EFAULT;
 	}
@@ -77,15 +67,8 @@ SYSCALL_DEFINE4(get_checksum, int, fd, size_t, size, off_t, offset, int *,
 		return -EINVAL;
 	}
 	checksum_list_read_lock(f);
-	printk(KERN_INFO
-	       "[MATI] get_checksum: searching for size=%zu, offset=%ld\n",
-	       size, offset);
 	list_for_each_entry(entry_it, &f->checksums_list_head, checksums) {
-		printk(KERN_INFO
-		       "[MATI] get_checksum: iterating, size=%zu, offset=%lld\n",
-		       entry_it->c.size, entry_it->c.offset);
 		if (entry_it->c.size == size && entry_it->c.offset == offset) {
-			printk(KERN_INFO "[MATI] found!\n");
 			ret = entry_it->c.value;
 			break;
 		}
@@ -102,7 +85,6 @@ SYSCALL_DEFINE1(count_checksums, int, fd)
 	struct file *f;
 	struct list_head *pos;
 	size_t s;
-	printk(KERN_INFO "[MATI] count_checksums: hello world!\n");
 	f = fget(fd);
 	if (!f) {
 		return -EINVAL;
@@ -134,14 +116,12 @@ SYSCALL_DEFINE1(reset_checksums, int, fd)
 
 int bpf_checker_decide(struct checker_ctx *ctx)
 {
-	// printk(KERN_INFO "[MATI] bpf_checker_decide code is running!\n");
 	return 0;
 }
 int bpf_checker_calculate(struct checker_ctx *ctx)
 {
 	struct bpf_checker_ctx_with_file *ctx_with_file;	
 	ctx_with_file = container_of(ctx, struct bpf_checker_ctx_with_file, c);	
-	printk(KERN_INFO "[MATI] bpf_checker_calculate default code is running! setting calculated_by_default_function to true\n");
 	ctx_with_file->was_calculated_by_default_function = true;
 	return 0;
 };
@@ -154,16 +134,12 @@ BPF_CALL_4(bpf_copy_to_buffer, void *, ctx, unsigned long, offset, void *, ptr,
 	loff_t s_offset;
 	struct bpf_checker_ctx_with_file *ctx_with_file =
 		container_of(ctx, struct bpf_checker_ctx_with_file, c);
-	printk(KERN_INFO "[MATI] bpf_copy_to_buffer: Successfully retrieved file with fd: %p\n",
-	       ctx_with_file->f);
 	
-
 	s_offset = ctx_with_file->o + offset;
 	ctx_with_file->f->checker_log_flag = true;
 	ret = kernel_read(ctx_with_file->f, ptr, size, &s_offset);
 	ctx_with_file->f->checker_log_flag = false;
 	if (ret < 0) {
-		printk(KERN_INFO "[MATI] bpf_copy_to_buffer: Error during vfs_read!\n");
 	}
 	return ret;
 }
@@ -183,8 +159,6 @@ static bool bpf_checker_prog_is_valid_access(int off, int size,
 					     const struct bpf_prog *prog,
 					     struct bpf_insn_access_aux *info)
 {
-	printk("[MATI] bpf_checker_prog_is_valid_access:  off: %d, size: %d sizeof(checker_ctx): %zu\n",
-	       off, size, sizeof(struct checker_ctx));
 	if (off < 0 || off >= sizeof(struct checker_ctx))
 		return false;
 	if (type != BPF_READ)
@@ -207,12 +181,8 @@ bpf_checker_func_proto(enum bpf_func_id func_id, const struct bpf_prog *prog)
 {
 	switch (func_id) {
 	case BPF_FUNC_get_current_uid_gid:
-		printk(KERN_INFO
-		       "[MATI] bpf_checker_func_proto: BPF_FUNC_get_current_uid_gid\n");
 		return &bpf_get_current_uid_gid_proto;
 	case BPF_FUNC_get_current_pid_tgid:
-		printk(KERN_INFO
-		       "[MATI] bpf_checker_func_proto: BPF_FUNC_get_current_pid_tgid\n");
 		return &bpf_get_current_pid_tgid_proto;
 	case BPF_FUNC_copy_to_buffer:
 		return &bpf_copy_to_buffer_proto;

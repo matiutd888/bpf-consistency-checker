@@ -18,15 +18,9 @@
 #include <linux/ima.h>
 #include <linux/bpf-cgroup.h>
 
-// [MATI] na to popatrzeć
-// czyli to są deklaracje punktów podpięcia
-
 /* For every LSM hook that allows attachment of BPF programs, declare a nop
  * function where a BPF program can be attached.
  */
-
-// Deklarujemy na dwa sposoby
-// nop funkcje oraz btf_id
 #define LSM_HOOK(RET, DEFAULT, NAME, ...)	\
 noinline RET bpf_lsm_##NAME(__VA_ARGS__)	\
 {						\
@@ -41,10 +35,6 @@ BTF_SET_START(bpf_lsm_hooks)
 #include <linux/lsm_hook_defs.h>
 #undef LSM_HOOK
 BTF_SET_END(bpf_lsm_hooks)
-
-// Czy mam to robić?
-
-
 
 /* List of LSM hooks that should operate on 'current' cgroup regardless
  * of function signature.
