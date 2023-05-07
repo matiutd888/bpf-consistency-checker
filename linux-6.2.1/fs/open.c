@@ -1302,6 +1302,7 @@ static long do_sys_openat2(int dfd, const char __user *filename,
 	struct filename *tmp;
 	struct bpf_checker_ctx_with_file x_with_file;
 	int ret;
+	struct task_struct *task;
 
 	x_with_file.c.flags = how->flags;
 	x_with_file.c.mode = how->mode;
@@ -1328,28 +1329,27 @@ static long do_sys_openat2(int dfd, const char __user *filename,
 				fd = PTR_ERR(f);
 
 			} else {
-				// [MATI] could also use current_cred()
-				x_with_file.o = 0;
-				x_with_file.f = f;
-				x_with_file.c.uid = f->f_inode->i_uid;
-				x_with_file.c.gid = f->f_inode->i_gid;
-				ret = bpf_checker_decide(&x_with_file.c);
-				if (ret != 0) {
-					printk(KERN_INFO "[MATI] do_sys_openat2: bpf_checker_ctx_with_file with file: %p\n", f);
-					printk("[MATI] do_sys_openat2: checker_decide returned value different than 0! ret = %d\n", ret);
-				}
-				if (ret < 0) {
-					printk("[MATI] do_sys_openat2: checker_decide returned less than 0! ret = %d\n", ret);
-				} else {
-					atomic_set(&f->checker_count, ret);
+				task = current;
+				if (likely(task)) {
+					x_with_file.o = 0;
+					x_with_file.f = f;
+					current_uid_gid(&x_with_file.c.uid, &x_with_file.c.gid);
+					ret = bpf_checker_decide(&x_with_file.c);
+					if (ret != 0) {
+						printk(KERN_INFO "[MATI] do_sys_openat2: bpf_checker_ctx_with_file with file: %p\n", f);
+						printk("[MATI] do_sys_openat2: checker_decide returned value different than 0! ret = %d\n", ret);
+					}
+					if (ret < 0) {
+						printk("[MATI] do_sys_openat2: checker_decide returned less than 0! ret = %d\n", ret);
+					} else {
+						atomic_set(&f->checker_count, ret);
+					}
 				}
 			}
 		}
 	}
 	putname(tmp);
 	
-	if (fd >= 0) {
-	}
 	return fd;
 }
 
