@@ -41,7 +41,7 @@ int main() {
         assert(syscall(453, fd) == 1);
         printf("child executed\n");
         close(fd);
-        // bpf_test_cleanup(&test);
+        bpf_test_cleanup(&test);
         exit(0);
     } else {
         sleep(2);
@@ -54,12 +54,16 @@ int main() {
         assert(syscall(451, fd, &checksum, &size, &offset) == 0);
         assert(checksum == (6 + 7 + 8 + 3 * (int)'0') && size == sizeof(parent) && offset == sizeof(child));
         write(fd, parent, sizeof(parent));        
+        
+        
+        
         assert(syscall(453, fd) == 3);
         assert(syscall(451, fd, &checksum, &size, &offset) == 0);
         assert(checksum == (6 + 7 + 8 + 3 * (int)'0') && size == sizeof(parent) && offset == sizeof(child) + sizeof(parent));
-        syscall(452, sizeof(parent), sizeof(child), &checksum);
+        
+        printf("executing syscall 452\n");
+        assert(syscall(452, fd, sizeof(parent), sizeof(child), &checksum) == 0);
         assert(checksum == (6 + 7 + 8 + 3 * (int)'0'));
-        // fprintf(fp, "parent\n");  
         close(fd);
         wait(NULL);
         printf("parent executed\n");
@@ -67,6 +71,7 @@ int main() {
 
 
 cleanup:
+    printf("cleaning up!\n");
     bpf_test_cleanup(&test);
 	return res;
 }

@@ -1,5 +1,5 @@
 #include "common.h"
-
+#include <assert.h>
 
 const char msg[] = "xyzzy xyzzy xyzzy\n";
 int main(int argc, char **argv)
@@ -24,6 +24,8 @@ int main(int argc, char **argv)
         res = -1;
         perror("write");
     }
+
+    assert(syscall(453, fd) == 0);
 
 	close(fd);
 

@@ -9587,20 +9587,34 @@ int bpf_link__destroy(struct bpf_link *link)
 	int err = 0;
 
 	if (IS_ERR_OR_NULL(link))  {
-		printf("[MATI] bpf_link__destroy: link already err or null!\n");
+		printf("libbpf: [MATI] bpf_link__destroy: link already err or null!\n");
 		return 0;
 	}
 	
-		
-	if (!link->disconnected && link->detach)
+	if (!link->disconnected && link->detach)  {
+		printf("libbpf: [MATI] bpf_link__destroy: disconnected and detach!\n");
 		err = link->detach(link);
-	if (link->pin_path)
-		free(link->pin_path);
-	if (link->dealloc)
+	
+	} 
+	if (link->pin_path) {
+
+		printf("libbpf: [MATI] bpf_link__destroy: pin patch!\n");
+			free(link->pin_path);
+	}
+	if (link->dealloc) {
+		printf("libbpf: [MATI] bpf_link__destroy: dealloc!\n");
+			free(link->pin_path);
+	
 		link->dealloc(link);
-	else
+	
+	} else {
+		printf("libbpf: [MATI] bpf_link__destroy: free!\n");
+		free(link->pin_path);
+	
 		free(link);
 
+		}
+		
 	return libbpf_err(err);
 }
 

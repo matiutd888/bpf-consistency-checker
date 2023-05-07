@@ -11,7 +11,8 @@
         "initializer_list": "c",
         "valarray": "c",
         "atomic": "c",
-        "condition_variable": "c"
+        "condition_variable": "c",
+        "unistd.h": "c"
     },
     "workbench.colorCustomizations": {
         "activityBar.background": "#581131",

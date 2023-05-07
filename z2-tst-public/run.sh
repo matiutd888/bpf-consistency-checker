@@ -41,8 +41,8 @@ run simple_write
 run complex_write
 run decide_no_calculate
 run test_reset
-# run test_fork
-# run simple_write
+run test_fork
+run simple_write
 run test_syscalls
 
 echo "==== FAIL CTX"
