@@ -1,7 +1,8 @@
 # BPF consistency checker
-Patch to 6.2.1 Linux kernel that introduces a new type of eBPF program, that can be used to calculate checksums on file writes and validate them using dedicated syscalls.
-Written for Advanced topics in operating systems University course.
-Below you can find a content of README.md that was submitted as a part of the solution.
+Patch to `6.2.1` Linux kernel that introduces a new type of eBPF program, that can be used to calculate checksums on file writes and validate them using dedicated syscalls.
+Written for _Advanced topics in operating systems_ University course.
+
+Below you can find a content of _README.md_ that was submitted as a part of the solution.
 
 #### Krótki opis rozwiązania
 
